@@ -8,7 +8,7 @@ import bcast from '@windy/broadcast';
 import { emitter as picker } from '@windy/picker';
 //import http from '@windy/http';
 //import rs from '@windy/rootScope';
-import ftch from '@windy/fetch';
+import windyFetch from '@windy/fetch';
 import interpolator from '@windy/interpolator';
 import loc from '@windy/location';
 
@@ -446,7 +446,9 @@ function fetchData(c) {
         datafnd = false;
         c.interpolate=true;
         c.step=1;
-        ftch.getPointForecastData(store.get('product'), c)
+        let product=store.get('product');
+        if(product=="topoMap") product='ecmwf';
+        windyFetch.getPointForecastData(product, c)
             .then(data => {
                 console.log(data);
                 wxdata = data;
@@ -461,7 +463,7 @@ function fetchData(c) {
             });
 
         /*    
-        ftch.getMeteogramForecastData(store.get('product'), c)
+        windyFetch.getMeteogramForecastData(store.get('product'), c)
             .then(data => {
                 console.log(data);
             })
