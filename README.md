@@ -17,3 +17,9 @@ Elevation is obtained from the Windy server,  and bathymetry (1km resolution) fr
 [https://en.wikipedia.org/wiki/Density_altitude](https://en.wikipedia.org/wiki/Density_altitude)
 
 You can also choose a few other weather parameters to show on the left side of the picker.
+
+### Path to this plugin:
+
+Once the plugin has been installed,  open it with the following url:
+
+[windy.com/plugin/density-alt/lat/lon](https://www.windy.com/plugin/density-alt/0/0)
