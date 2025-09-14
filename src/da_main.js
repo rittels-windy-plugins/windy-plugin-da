@@ -1,28 +1,28 @@
-
-console.log("RUNNING DA");;
+console.log('RUNNING DA');
 
 import utils from '@windy/utils';
 import { map } from '@windy/map';
 import store from '@windy/store';
 import bcast from '@windy/broadcast';
 import { emitter as picker } from '@windy/picker';
-//import http from '@windy/http';
+import http from '@windy/http';
 //import rs from '@windy/rootScope';
 import windyFetch from '@windy/fetch';
 import interpolator from '@windy/interpolator';
 import loc from '@windy/location';
 
-import * as  singleclick from '@windy/singleclick';
+import * as singleclick from '@windy/singleclick';
 
 import config from './pluginConfig';
 
 import { insertGlobalCss, removeGlobalCss } from './globalCss.js';
 
-import { getPickerMarker } from './picker/picker.js';
-import {checkVersion, showMsg } from './utils/infoWinUtils.js';
+import { getPickerMarker } from 'custom-windy-picker';
 
 const { name } = config;
 const { $, getRefs } = utils;
+
+const { log } = console;
 
 let thisPlugin, refs, node;
 
@@ -32,8 +32,9 @@ let pickerT;
 let loggerTO;
 function logMessage(msg) {
     if (!store.get('consent').analytics) return;
-    fetch(`https://www.flymap.org.za/windy-logger/logger.htm?name=${name}&message=${msg}`, { cache: 'no-store' })
-        .then(console.log);
+    fetch(`https://www.flymap.org.za/windy-logger/logger.htm?name=${name}&message=${msg}`, {
+        cache: 'no-store',
+    }).then(console.log);
 }
 
 function init(plgn) {
@@ -51,7 +52,7 @@ function init(plgn) {
 
     // add[Right|Left]Plugin is done by focus
 
-    // todo move this to svelte later 
+    // todo move this to svelte later
     let choices = getChoices();
     for (let c = refs.choose.children, i = 0; i < c.length; i++) {
         c[i].classList[choices[i] == 0 ? 'add' : 'remove']('checkbox--off');
@@ -85,10 +86,8 @@ function init(plgn) {
     // neeeded???
     thisPlugin.closeCompletely = closeCompletely;
 
-    checkVersion(refs.messageDiv);
-
     hasHooks = true;
-};
+}
 
 const closeCompletely = function () {
     console.log('DA close completely');
@@ -108,7 +107,7 @@ const closeCompletely = function () {
     store.off('product', setProd);
 
     // click stuff
-    singleclick.release(name, "high");
+    singleclick.release(name, 'high');
     singleclick.singleclick.off(name, pickerT.openMarker);
     bcast.off('pluginOpened', onPluginOpened);
     bcast.off('pluginClosed', onPluginClosed);
@@ -119,7 +118,7 @@ const closeCompletely = function () {
     delete thisPlugin.focus;
     delete thisPlugin.defocus;
 
-    pickerT = null;  // in case plugin re-opened
+    pickerT = null; // in case plugin re-opened
     hasHooks = false;
 };
 
@@ -133,7 +132,7 @@ function onPluginClosed(p) {
     // if the plugin closed has high singleclickpriority,  it returns single click to default picker,
     // so instead register this plugin as priority high
     if (p !== name && W.plugins[p].singleclickPriority == 'high') {
-        console.log("on plugin closed:", p, "  This plugin gets priority:", name);
+        console.log('on plugin closed:', p, '  This plugin gets priority:', name);
         singleclick.register(name, 'high');
     }
 }
@@ -225,7 +224,7 @@ function setURL() {
 }
 
 function pickerMoved(e) {
-    if (e.source == 'picker') return;  // only react on custom-picker
+    if (e.source == 'picker') return; // only react on custom-picker
     //if (pickerT.getActivePlugin() != name) return;
     elevfnd = datafnd = true;
     setTimeout(fetchData, 500, e);
@@ -257,7 +256,6 @@ function parseWxCode(c) {
 }
 
 function readChoices(lastClick) {
-
     let choices = [...refs.choose.children].map(e => !e.classList.contains('checkbox--off'));
     if (choices.filter(e => e).length > 5) {
         let i;
@@ -265,7 +263,7 @@ function readChoices(lastClick) {
         choices[i] = false;
         [...refs.choose.children][i].classList.add('checkbox--off');
     }
-    
+
     store.set('plugin-da-selected-vals', parseInt(choices.map(Number).join(''), 2));
 }
 
@@ -283,12 +281,10 @@ function onChoose(e) {
 
 function calculate() {
     if (wxdata) {
-
         elevPntFcst = wxdata.data.header.elevation;
-        
+
         let elev = Math.round(elp.elev * 3.28084);
         if (elev < 0) elev = 0;
-
 
         let d = wxdata.data.data;
         console.log(d);
@@ -311,7 +307,7 @@ function calculate() {
             pressure = d.pressure[ix],
             dewPoint = d.dewPoint[ix],
             temp = d.temp[ix];
-            //weathercode = d.weathercode[ix];
+        //weathercode = d.weathercode[ix];
 
         let pressureC = Math.round(pressure) / 100;
         let tempC = Math.round((temp + K) * 10) / 10;
@@ -326,8 +322,6 @@ function calculate() {
             4.686035 -
             K;
 
-        
-
         let deltaT = temp - wetBulb - K;
 
         let vals = [
@@ -339,7 +333,7 @@ function calculate() {
             { metric: 'rh', txt: 'Humidity: ', v: rh },
             { metric: 'rain', txt: 'Rain: ', v: rain },
             { metric: 'altitude', txt: 'Cloudbase: ', v: cbase },
-           // { metric: '', txt: 'Wx code: ' },
+            // { metric: '', txt: 'Wx code: ' },
             { metric: 'wind', txt: 'Wind: ', v: wind },
             { metric: 'wind', txt: 'Gust: ', v: gust },
         ];
@@ -370,8 +364,6 @@ function calculate() {
             ldiv += '<br>';
         });
 
-        
-
         if (pickerT.getLeftPlugin() == name)
             pickerT.fillLeftDiv(ldiv, true, { 'flex-basis': '50%' });
         //pickerT.showLeftDiv();
@@ -381,8 +373,9 @@ function calculate() {
                 `
         <div>
             ${thermalspan}
-            <span style="width:45px;display:inline-block;">${elp.elev > 0 ? 'Elev:' : 'Depth'}</span>${elp.elev > 0 ? elev + '&nbspft' : Math.round(elp.elev) + '&nbspm'
-                }<br>
+            <span style="width:45px;display:inline-block;">${elp.elev > 0 ? 'Elev:' : 'Depth'}</span>${
+                elp.elev > 0 ? elev + '&nbspft' : Math.round(elp.elev) + '&nbspm'
+            }<br>
             <span style="width:45px;display:inline-block;">PA:</span>${Math.round(pa)}&nbspft<br>
             <span style="width:45px;display:inline-block;">DA:</span>${Math.round(da)}&nbspft<br>
             <span style="color:white">
@@ -397,34 +390,46 @@ function calculate() {
 }
 
 function fetchData(c) {
-    if (c.source == 'picker') return;  // only react on custom-picker
-    
+    if (c.source == 'picker') return; // only react on custom-picker
+
     lastpos = c;
     //  c.model = prod;
     lefta -= 0.05;
     righta -= 0.05;
     if (lefta < 0.6) lefta = 0.6;
     if (righta < 0.6) righta = 0.6;
-    if ($('#picker-div-left'))
-        $('#picker-div-left').style.color = `rgba(255,255,255,${lefta})`;
-    if ($('#picker-div-right'))
-        $('#picker-div-right').style.color = `rgba(255,255,255,${righta})`;
+    if ($('#picker-div-left')) $('#picker-div-left').style.color = `rgba(255,255,255,${lefta})`;
+    if ($('#picker-div-right')) $('#picker-div-right').style.color = `rgba(255,255,255,${righta})`;
     if (elevfnd) {
         elevfnd = false;
-        fetch(`https://www.flymap.co.za/srtm30/elev.php?lat=${c.lat}&lng=${c.lng || c.lon}`, {
-            method: 'GET',
-        })
-            .then(r => r.json())
-            .then(r => {
-                //http.get(`/services/elevation/${c.lat}/${c.lon}`).then(d =>{
-                //console.log(d.data);
-                //elp.elev = d.data;
+        http.get(`services/elevation/${c.lat}/${c.lng || c.lon}`)
+            .then(({ data }) => {
+                log('WINDY ELEV', data);
+                return data;
+            })
 
-                elp.elev = r[0];
+            .then(r => {
+                elp.elev = r; //[0];
                 elp.pos = c;
                 setTimeout(() => (elevfnd = true), 100);
                 righta = 1;
-                calculate();
+                if (r == 0) {                    //if over sea,  try to find depth
+                    fetch(
+                        `https://www.flymap.co.za/srtm30/elev.php?lat=${c.lat}&lng=${c.lng || c.lon}`,
+                        { method: 'GET' },
+                    )
+                        .then(r => r.json())
+                        .then(r => {
+                            elp.elev = r[0];
+                            calculate();
+                        })
+                        .catch(er => {
+                            log('DEPTH NOT FOUND,  use 0');
+                            calculate();
+                        });
+                } else {
+                    calculate();
+                }
             })
             .catch(er => {
                 console.log(er);
@@ -432,8 +437,7 @@ function fetchData(c) {
             });
     }
 
-
-/*
+    /*
     if (store.get('overlay') == 'ccl') {
         interpolator(ip => {
             thermal = ip(c)[0] * 3.28084;
@@ -444,11 +448,12 @@ function fetchData(c) {
 
     if (datafnd) {
         datafnd = false;
-        c.interpolate=true;
-        c.step=1;
-        let product=store.get('product');
-        if(product=="topoMap") product='ecmwf';
-        windyFetch.getPointForecastData(product, c)
+        c.interpolate = true;
+        c.step = 1;
+        let product = store.get('product');
+        if (product == 'topoMap') product = 'ecmwf';
+        windyFetch
+            .getPointForecastData(product, c)
             .then(data => {
                 console.log(data);
                 wxdata = data;
@@ -473,4 +478,3 @@ function fetchData(c) {
         */
     }
 }
-

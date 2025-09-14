@@ -26,45 +26,49 @@
     <div bind:this={cornerHandle} data-ref="cornerHandle" class="corner-handle"></div>
     <div bind:this={cornerHandleTop} data-ref="cornerHandleTop" class="corner-handle-top"></div>
 
-    <div class="scrollable">
+    <div class="flex-container">
         <div class="plugin__title">Elevation, Density Altitude and Multipicker</div>
-        <div>
-            <br />
-            Shows elevation at picker position.<br /><br />
-            The temperature, pressure (QNH) and dew point are loaded for the picker position.<br />
-            <br />
-            The pressure altitude (PA), density altitude (DA) and DA corrected for dew point(DA_dp) are
-            then calculated.<br /><br />
-            Elevation (1km resolution) is obtained from:
-            <a style="font-size:0.8em" href=" https://topex.ucsd.edu/WWW_html/srtm30_plus.html"
-                ><u>https://topex.ucsd.edu/WWW_html/srtm30_plus.html</u></a
-            ><br /><br />
-            Calculations:<br /><br />
-            &nbsp;&nbsp;PA = elev + 27 x (1013-QNH)<br />
-            &nbsp;&nbsp;DA = PA + 118.8 x (temp-ISA)<br />
-            &nbsp;&nbsp;where ISA = 15 - 1.98 x PA/1000<br />
-            &nbsp;&nbsp;DA_dp = DA + 20 x Dew Point<br /><br />
-            <span style="font-size:8px">https://en.wikipedia.org/wiki/Density_altitude</span>
-        </div>
-        <br /><br />
-        <div>
-            <div class="header">
-                Choose what to display on the left side of the picker (max&nbsp5):
+        <div class="scrollable">
+            <div>
+                <br />
+                Shows elevation at picker position.<br /><br />
+                The temperature, pressure (QNH) and dew point are loaded for the picker position.<br
+                />
+                <br />
+                The pressure altitude (PA), density altitude (DA) and DA corrected for dew point(DA_dp)
+                are then calculated.<br /><br />
+                Elevation (1km resolution) is obtained from the Windy server,  and bathymetry from:
+                <a style="font-size:0.8em" href=" https://topex.ucsd.edu/WWW_html/srtm30_plus.html"
+                    ><u>https://topex.ucsd.edu/WWW_html/srtm30_plus.html</u></a
+                ><br /><br />
+                Calculations:<br /><br />
+                &nbsp;&nbsp;PA = elev + 27 x (1013-QNH)<br />
+                &nbsp;&nbsp;DA = PA + 118.8 x (temp-ISA)<br />
+                &nbsp;&nbsp;where ISA = 15 - 1.98 x PA/1000<br />
+                &nbsp;&nbsp;DA_dp = DA + 20 x Dew Point<br /><br />
+                <span style="font-size:8px">https://en.wikipedia.org/wiki/Density_altitude</span>
             </div>
-            <div data-ref="choose">
-                <div class="checkbox">QNH</div>
-                <div class="checkbox">Temp</div>
-                <div class="checkbox">Dew point</div>
-                <div class="checkbox">Wet bulb (Calculated from Stull formula)</div>
-                <div class="checkbox">&Delta;T = Temp - Wet bulb</div>
-                <div class="checkbox">Humidity</div>
-                <div class="checkbox">Rain</div>
-                <div class="checkbox checkbox--off">Cloudbase</div>
-                <!--<div class="checkbox checkbox--off">Wx code</div>-->
-                <div class="checkbox checkbox--off">Wind</div>
-                <div class="checkbox checkbox--off">Gust</div>
+            <br /><br />
+            <div>
+                <div class="header">
+                    Choose what to display on the left side of the picker (max&nbsp5):
+                </div>
+                <div data-ref="choose">
+                    <div class="checkbox">QNH</div>
+                    <div class="checkbox">Temp</div>
+                    <div class="checkbox">Dew point</div>
+                    <div class="checkbox">Wet bulb (Calculated from Stull formula)</div>
+                    <div class="checkbox">&Delta;T = Temp - Wet bulb</div>
+                    <div class="checkbox">Humidity</div>
+                    <div class="checkbox">Rain</div>
+                    <div class="checkbox checkbox--off">Cloudbase</div>
+                    <!--<div class="checkbox checkbox--off">Wx code</div>-->
+                    <div class="checkbox checkbox--off">Wind</div>
+                    <div class="checkbox checkbox--off">Gust</div>
+                </div>
             </div>
         </div>
+        <Footer />
         <!--
         <br /><br />
         <div>
@@ -117,7 +121,8 @@
         makeTopLeftHandle,
         embedForTablet,
     } from './utils/infoWinUtils.js';
-    import { getPickerMarker } from './picker/picker.js';
+    import { getPickerMarker } from 'custom-windy-picker';
+    import Footer from './utils/Footer.svelte';
 
     import config from './pluginConfig.js';
     const { title, name } = config;
@@ -194,5 +199,5 @@
 </script>
 
 <style lang="less">
-    @import 'da.less?1755696673097';
+    @import 'da.less?1757835763261';
 </style>

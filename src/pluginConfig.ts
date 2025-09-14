@@ -2,7 +2,7 @@ import type { ExternalPluginConfig } from '@windy/interfaces';
 
 const config: ExternalPluginConfig = {
     name: 'windy-plugin-da',
-    version: '0.2.13',
+    version: '0.2.15',
     icon: '⛰',
     title: 'Density Alt',
     description:'The picker shows the density altitude and other information,  provides a multi-picker.',

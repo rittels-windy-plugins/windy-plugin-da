@@ -1,60 +1,64 @@
 @import 'utils/infoWin_style_svelte.less';
 
-@name  : windy-plugin-da;
-@width : 350px;
+@name: windy-plugin-da;
+@width: 350px;
 @bottom: 150px;
 
 #@{name}-info {
-    .scrollable {
-        box-sizing: border-box;
-        position  : relative;
-        height    : 100%;
-        width     : 100%;
-        padding   :0px 10px;
-        overflow-y: scroll;
-        overflow-x: hidden;
-
-        .add-scroll-bar();
-
+    .flex-container {
+        height: 100%;
+        
         .plugin__title {
-            font-size    : 22px !important;
-    
+            font-size: 22px !important;
+
             padding: 5px 0px 10px 0px;
-            position:sticky;
-            top:0px;
+            position: sticky;
+            top: 0px;
             //background-color: #404040aa;
         }
+        .scrollable {
+            box-sizing: border-box;
+            position: relative;
 
-        [data-ref="choose"] {
-            .checkbox {
-                display: block;
+            width: 100%;
+            padding: 0px 10px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            flex-grow: 1;
+
+            .add-scroll-bar();
+
+            [data-ref='choose'] {
+                .checkbox {
+                    display: block;
+                }
             }
-        }
 
-        .toggle-section {
-            font-size    : 15px;
-            margin-bottom: 3px;
+            .toggle-section {
+                font-size: 15px;
+                margin-bottom: 3px;
 
-            &.checkbox {
-                &::before {
-                    content  : '\25B7\00a0\00a0';
-                    top      : -0.1em;
-                    font-size: 0.8em;
-                }
-
-                &+* {
-                    display: none;
-                }
-
-                &.off {
+                &.checkbox {
                     &::before {
-                        content  : "\25BD\00a0\00a0";
-                        top      : -0.1em;
+                        content: '\25B7\00a0\00a0';
+                        top: -0.1em;
                         font-size: 0.8em;
                     }
 
-                    &+* {
-                        display: block;
+                    & + * {
+                        display: none;
+                    }
+
+                    &.off {
+                        &::before {
+                            content: '\25BD\00a0\00a0';
+                            top: -0.1em;
+                            font-size: 0.8em;
+                        }
+
+                        & + * {
+                            display: block;
+                        }
                     }
                 }
             }
@@ -67,13 +71,12 @@
         margin-right: 0px;
     }
 
-    [data-ref="messageDiv"] {
+    [data-ref='messageDiv'] {
         margin-top: 3px;
-        font-size : 0.8em;
+        font-size: 0.8em;
     }
 
     .hidden {
-        display: none
+        display: none;
     }
 }
-
