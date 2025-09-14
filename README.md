@@ -14,6 +14,6 @@ Elevation is obtained from the Windy server,  and bathymetry (1km resolution) fr
     where ISA = 15 - 1.98 x PA/1000
     DA_dp = DA + 20 x Dew Point
 
-https://en.wikipedia.org/wiki/Density_altitude
+[https://en.wikipedia.org/wiki/Density_altitude](https://en.wikipedia.org/wiki/Density_altitude)
 
 You can also choose a few other weather parameters to show on the left side of the picker.
