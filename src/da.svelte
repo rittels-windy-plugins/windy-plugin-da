@@ -37,7 +37,7 @@
                 <br />
                 The pressure altitude (PA), density altitude (DA) and DA corrected for dew point(DA_dp)
                 are then calculated.<br /><br />
-                Elevation (1km resolution) is obtained from the Windy server,  and bathymetry from:
+                Elevation is obtained from the Windy server,  and bathymetry  (1km resolution) from:
                 <a style="font-size:0.8em" href=" https://topex.ucsd.edu/WWW_html/srtm30_plus.html"
                     ><u>https://topex.ucsd.edu/WWW_html/srtm30_plus.html</u></a
                 ><br /><br />
