@@ -8,21 +8,25 @@ import { emitter as picker } from '@windy/picker';
 import http from '@windy/http';
 //import rs from '@windy/rootScope';
 import windyFetch from '@windy/fetch';
-import interpolator from '@windy/interpolator';
+//import interpolator from '@windy/interpolator';
 import loc from '@windy/location';
+import geoloc from '@windy/geolocation';
 
 import * as singleclick from '@windy/singleclick';
 
 import config from './pluginConfig';
 
 import { insertGlobalCss, removeGlobalCss } from './globalCss.js';
-
 import { getPickerMarker } from 'custom-windy-picker';
+import { coordsToFields } from './coordinates.js';
 
 const { name } = config;
 const { $, getRefs } = utils;
 
 const { log } = console;
+const { round, pow, atan, sqrt, abs, trunc, sign } = Math;
+
+const ft2m = 0.3048;
 
 let thisPlugin, refs, node;
 
@@ -50,14 +54,41 @@ function init(plgn) {
 
     pickerT = getPickerMarker();
 
-    // add[Right|Left]Plugin is done by focus
-
     // todo move this to svelte later
-    let choices = getChoices();
-    for (let c = refs.choose.children, i = 0; i < c.length; i++) {
-        c[i].classList[choices[i] == 0 ? 'add' : 'remove']('checkbox--off');
+
+    for (let rows = refs.choose.children, i = 0; i < rows.length; i++) {
+        $('.left', rows[i]).classList[getChoices('left')[i] == 0 ? 'add' : 'remove'](
+            'checkbox--off',
+        );
+        $('.right', rows[i]).classList[getChoices('right')[i] == 0 ? 'add' : 'remove'](
+            'checkbox--off',
+        );
     }
     refs.choose.addEventListener('click', onChoose);
+
+    refs.togglePickerElevation.addEventListener('click', e => {
+        refs.togglePickerElevation.classList.toggle('checkbox--off');
+        store.set(
+            'showPickerElevation',
+            !refs.togglePickerElevation.classList.contains('checkbox--off'),
+        );
+    });
+    refs.togglePickerElevation.classList[store.get('showPickerElevation') ? 'remove' : 'add'](
+        'checkbox--off',
+    );
+    refs.togglePickerCoordinates.addEventListener('click', e => {
+        refs.togglePickerCoordinates.classList.toggle('checkbox--off');
+        store.set('latlon', !refs.togglePickerCoordinates.classList.contains('checkbox--off'));
+    });
+    refs.togglePickerCoordinates.classList[store.get('latlon') ? 'remove' : 'add']('checkbox--off');
+
+    let myloc = geoloc.getMyLatestPos();
+    if (myloc) coordsToFields(myloc);
+
+    let headings = (+store.get('plugin-da-sections')).toString(2).padStart(4, '0');
+    node.querySelectorAll('.toggle-section').forEach((e, i) =>
+        e.classList[headings[i] == '1' ? 'add' : 'remove']('off'),
+    );
 
     if (hasHooks) return;
 
@@ -159,33 +190,52 @@ let elevPntFcst;
 
 const K = -273.15;
 
-let nVals = 10;
-
 let ts = Date.now();
 
-store.insert('plugin-da-selected-vals', {
-    def: 480,
-    allowed: v => v >= 0 && v < Math.pow(2, nVals),
+let vals = [
+    { metric: 'altitude', txt: 'Elev' },
+    { metric: 'altitude', txt: 'PA', menu: 'Pressure Alt' },
+    { metric: 'altitude', txt: 'DA', menu: 'Density Alt' },
+    { metric: 'altitude', txt: 'DA_dp', menu: 'DA corrected for DP' },
+    { metric: 'pressure', txt: 'QNH' },
+    { metric: 'temp', txt: 'Temp' },
+    { metric: 'temp', txt: 'Dew Point' },
+    { metric: 'temp', txt: 'Wet Bulb', menu: 'Wet Bulb (Stull formula)' },
+    { metric: 'temp', txt: '&Delta;T', menu: '&Delta;T = Temp - Wet Bulb' },
+    { metric: 'rh', txt: 'Humidity' },
+    { metric: 'rain', txt: 'Rain' },
+    { metric: 'altitude', txt: 'Cloudbase' },
+    // { metric: '', txt: 'Wx code: ' },
+    { metric: 'wind', txt: 'Wind' },
+    { metric: 'wind', txt: 'Gust' },
+    { metric: '', txt: `DDD°MM'SS.S"` },
+    { metric: '', txt: `DDD°MM.MMM'` },
+    { metric: '', txt: `DDD.DDDDD°` },
+];
+let nVals = vals.length;
+
+store.insert('plugin-da-selected-vals-left', {
+    def: parseInt('00001110001100000', 2),
+    allowed: v => v >= 0 && v < pow(2, nVals),
+    save: true,
+});
+store.insert('plugin-da-selected-vals-right', {
+    def: parseInt('11110000000000000', 2),
+    allowed: v => v >= 0 && v < pow(2, nVals),
+    save: true,
+});
+store.insert('plugin-da-sections', {
+    def: parseInt('1100', 2),
+    allowed: v => v >= 0 && v < pow(2, 4),
     save: true,
 });
 
-function getChoices() {
-    let sv = store.get('plugin-da-selected-vals');
+function getChoices(side) {
+    let sv = store.get('plugin-da-selected-vals-' + side);
     if (!(sv || sv === 0)) return Array(10).fill(0).fill(1, 0, 4);
-    let choices = ('0000000000000' + store.get('plugin-da-selected-vals').toString(2))
-        .slice(-nVals)
-        .split('')
-        .map(Number);
+    let choices = sv.toString(2).padStart(nVals, '0').split('').map(Number);
     return choices;
 }
-
-export const onopen = params => {
-    if (params && params.query) {
-        console.log(params);
-        query = params.query;
-        useQuery(query);
-    }
-};
 
 //read query data
 
@@ -255,27 +305,48 @@ function parseWxCode(c) {
     return wc;
 }
 
-function readChoices(lastClick) {
-    let choices = [...refs.choose.children].map(e => !e.classList.contains('checkbox--off'));
-    if (choices.filter(e => e).length > 5) {
-        let i;
-        for (i = choices.length - 1; i > 0 && (choices[i] == false || i == lastClick); i--);
-        choices[i] = false;
-        [...refs.choose.children][i].classList.add('checkbox--off');
+function readChoices(lastClick, side) {
+    let otherSide = side == 'left' ? 'right' : 'left';
+
+    let els = {
+        left: [...refs.choose.children].map((e, i) => $('.left', e)),
+        right: [...refs.choose.children].map(e => $('.right', e)),
+    };
+
+    let choices = {};
+    for (let p in els) {
+        choices[p] = els[p].map(e => !e.classList.contains('checkbox--off'));
     }
 
-    store.set('plugin-da-selected-vals', parseInt(choices.map(Number).join(''), 2));
+    if (choices[side][lastClick] && choices[otherSide][lastClick]) {
+        els[otherSide][lastClick].classList.add('checkbox--off');
+        choices[otherSide][lastClick] = false;
+    }
+
+    for (let p in choices) {
+        if (choices[p].filter(e => e).length > 5) {
+            let i;
+            for (
+                i = choices[p].length - 1;
+                i > 0 && (choices[p][i] == false || i == lastClick);
+                i--
+            );
+            choices[p][i] = false;
+            els[p][i].classList.add('checkbox--off');
+        }
+        store.set('plugin-da-selected-vals-' + p, parseInt(choices[p].map(Number).join(''), 2));
+    }
 }
 
 function onChoose(e) {
     let tg = e.target;
-    let ix;
+    let ix, side;
     if (tg.classList.contains('checkbox')) {
         tg.classList.toggle('checkbox--off');
-        if (!tg.classList.contains('checkbox--off'))
-            ix = [...refs.choose.children].findIndex(e => tg == e);
+        ix = [...refs.choose.children].findIndex(e => e.contains(tg));
+        side = tg.classList.contains('left') ? 'left' : 'right';
     }
-    readChoices(ix);
+    readChoices(ix, side);
     calculate();
 }
 
@@ -283,11 +354,27 @@ function calculate() {
     if (wxdata) {
         elevPntFcst = wxdata.data.header.elevation;
 
-        let elev = Math.round(elp.elev * 3.28084);
+        let {
+            pos: { lat, lon },
+        } = wxdata;
+
+        let lata = abs(lat),
+            lati = trunc(lata),
+            latm = abs(lata % 1) * 60,
+            latmi = trunc(latm),
+            lats = abs(latm % 1) * 60,
+            NS = sign(lat) == 1 ? 'N' : 'S';
+        let lona = abs(lon),
+            loni = trunc(lona),
+            lonm = abs(lona % 1) * 60,
+            lonmi = trunc(lonm),
+            lons = abs(lonm % 1) * 60,
+            EW = sign(lon) == 1 ? 'E' : 'W';
+
+        let elev = elp.elev / ft2m;
         if (elev < 0) elev = 0;
 
         let d = wxdata.data.data;
-        console.log(d);
         let ix = 0;
         for (let i = 0; i < d.ts.length; i++) {
             if (d.ts[i] > ts) {
@@ -309,79 +396,97 @@ function calculate() {
             temp = d.temp[ix];
         //weathercode = d.weathercode[ix];
 
-        let pressureC = Math.round(pressure) / 100;
-        let tempC = Math.round((temp + K) * 10) / 10;
-        let dewPC = Math.round((dewPoint + K) * 10) / 10;
+        /** pressureC in hPa */
+        let pressureC = round(pressure) / 100;
+        let tempC = round((temp + K) * 10) / 10;
+        let dewPC = round((dewPoint + K) * 10) / 10;
+
         let da_corr_dp = dewPC * 20;
-
-        let wetBulb =
-            tempC * Math.atan(0.151977 * Math.sqrt(rh + 8.313659)) +
-            Math.atan(tempC + rh) -
-            Math.atan(rh - 1.676331) +
-            0.00391838 * Math.pow(rh, 1.5) * Math.atan(0.023101 * rh) -
-            4.686035 -
-            K;
-
-        let deltaT = temp - wetBulb - K;
-
-        let vals = [
-            { metric: 'pressure', txt: 'QNH: ', v: pressure },
-            { metric: 'temp', txt: 'Temp: ', v: temp },
-            { metric: 'temp', txt: 'Dew Point: ', v: dewPoint },
-            { metric: 'temp', txt: 'Wet Bulb: ', v: wetBulb },
-            { metric: 'temp', txt: '&Delta;T: ', v: deltaT },
-            { metric: 'rh', txt: 'Humidity: ', v: rh },
-            { metric: 'rain', txt: 'Rain: ', v: rain },
-            { metric: 'altitude', txt: 'Cloudbase: ', v: cbase },
-            // { metric: '', txt: 'Wx code: ' },
-            { metric: 'wind', txt: 'Wind: ', v: wind },
-            { metric: 'wind', txt: 'Gust: ', v: gust },
-        ];
-
         let pa = elev + 27 * (1013 - pressureC);
         let isa = 15 - (1.98 * pa) / 1000;
         let da = pa + 118.8 * (tempC - isa);
         let da_dp = da + da_corr_dp;
 
+        let wetBulb =
+            tempC * atan(0.151977 * sqrt(rh + 8.313659)) +
+            atan(tempC + rh) -
+            atan(rh - 1.676331) +
+            0.00391838 * pow(rh, 1.5) * atan(0.023101 * rh) -
+            4.686035 -
+            K;
+
+        let deltaT = temp - wetBulb - K;
+
+        vals.forEach(e => {
+            // prettier-ignore
+            switch (e.txt) {
+                case 'Elev':               e.v = elp.elev;        break;
+                case 'PA':                 e.v = pa*ft2m;         break;
+                case 'DA':                 e.v = da*ft2m;         break;
+                case 'DA_dp':              e.v = da_dp*ft2m;      break;
+                case 'QNH':                e.v = pressure;        break;
+                case 'Temp':               e.v = temp;            break;
+                case 'Dew Point':          e.v = dewPoint;        break;
+                case 'Wet Bulb':           e.v = wetBulb;         break;
+                case '&Delta;T':           e.v = deltaT;          break;
+                case 'Humidity':           e.v = rh;              break;
+                case 'Rain':               e.v = rain;            break;
+                case 'Cloudbase':          e.v = cbase;           break;
+                case 'Wind':               e.v = wind;            break;
+                case 'Gust':               e.v = gust;            break;
+                case `DDD°MM'SS.S"`:       e.v = `${lati}°${latmi}'${lats.toFixed(1)}"${NS} ${loni}°${lonmi}'${lons.toFixed(1)}"${EW}`;  break; 
+                case `DDD°MM.MMM'`:        e.v = `${lati}°${latm.toFixed(3)}'${NS} ${loni}°${lonm.toFixed(3)}'${EW}`;  break;  
+                case `DDD.DDDDD°`:         e.v = `${lata.toFixed(5)}°${NS} ${lona.toFixed(5)}°${EW}`;  break;   
+            }
+        });
+
         let thermalspan =
             thermal && elp.elev !== void 0
-                ? `<span style="width:60px;font-size:16px;display:inline-block;margin-bottom:5px;">&nbsp;${Math.round(thermal - elev)} AGL</span><br>`
+                ? `<span style="width:60px;font-size:16px;display:inline-block;margin-bottom:5px;">&nbsp;${round(thermal - elev)} AGL</span><br>`
                 : '';
 
-        let ldiv = '';
-        let choices = getChoices();
+        let pickerDivs = { ldiv: '', rdiv: '' };
+
         vals.forEach(({ metric, txt, v }, i) => {
-            if (!choices[i]) return;
-            /*
-            if (txt.includes('Wx code')) {
-                ldiv += 'Wx code: ' + parseWxCode(weathercode) + '<br>';
-                return;
+            let div;
+            if (getChoices('left')[i]) div = 'ldiv';
+            else if (getChoices('right')[i]) div = 'rdiv';
+            else return;
+
+            if (typeof v == 'string') pickerDivs[div] += v;
+            else {
+                let m = store.get('metric_' + metric);
+                if (txt == 'Elev' && m == 'ft' && v < 0) m = 'm'; // if undersea,  use meter
+                let conversion =
+                    m == 'ft' ? e => round(e / ft2m) : W.metrics[metric].conv[m].conversion;
+                pickerDivs[div] += `${txt}:  ${round(conversion(v))}${m}`;
+                if (txt.includes('Wind')) pickerDivs[div] += `, ${windDir}°`;
             }
-                */
-            let m = store.get('metric_' + metric);
-            ldiv += `${txt} ${Math.round(W.metrics[metric].conv[m].conversion(v))}${m}`;
-            if (txt.includes('Wind')) ldiv += `, ${windDir}°`;
-            ldiv += '<br>';
+            pickerDivs[div] += '<br>';
         });
 
         if (pickerT.getLeftPlugin() == name)
-            pickerT.fillLeftDiv(ldiv, true, { 'flex-basis': '50%' });
+            pickerT.fillLeftDiv(pickerDivs.ldiv, true, { 'flex-basis': '50%' });
         //pickerT.showLeftDiv();
 
         if (pickerT.getRightPlugin() == name)
             pickerT.fillRightDiv(
+                pickerDivs.rdiv,
+
+                /*
                 `
         <div>
             ${thermalspan}
             <span style="width:45px;display:inline-block;">${elp.elev > 0 ? 'Elev:' : 'Depth'}</span>${
-                elp.elev > 0 ? elev + '&nbspft' : Math.round(elp.elev) + '&nbspm'
+                elp.elev > 0 ? elev + '&nbspft' : round(elp.elev) + '&nbspm'
             }<br>
-            <span style="width:45px;display:inline-block;">PA:</span>${Math.round(pa)}&nbspft<br>
-            <span style="width:45px;display:inline-block;">DA:</span>${Math.round(da)}&nbspft<br>
+            <span style="width:45px;display:inline-block;">PA:</span>${round(pa)}&nbspft<br>
+            <span style="width:45px;display:inline-block;">DA:</span>${round(da)}&nbspft<br>
             <span style="color:white">
-            <span style="width:45px;display:inline-block;">DA_dp:</span>${Math.round(da_dp)}&nbspft
+            <span style="width:45px;display:inline-block;">DA_dp:</span>${round(da_dp)}&nbspft
             </span>
-        <div>`,
+        <div>`
+        */
                 { 'flex-basis': '50%' },
             );
         //pickerT.showRightDiv();
@@ -404,7 +509,6 @@ function fetchData(c) {
         elevfnd = false;
         http.get(`services/elevation/${c.lat}/${c.lng || c.lon}`)
             .then(({ data }) => {
-                log('WINDY ELEV', data);
                 return data;
             })
 
@@ -413,7 +517,8 @@ function fetchData(c) {
                 elp.pos = c;
                 setTimeout(() => (elevfnd = true), 100);
                 righta = 1;
-                if (r == 0) {                    //if over sea,  try to find depth
+                if (r == 0) {
+                    //if over sea,  try to find depth
                     fetch(
                         `https://www.flymap.co.za/srtm30/elev.php?lat=${c.lat}&lng=${c.lng || c.lon}`,
                         { method: 'GET' },
@@ -455,7 +560,6 @@ function fetchData(c) {
         windyFetch
             .getPointForecastData(product, c)
             .then(data => {
-                console.log(data);
                 wxdata = data;
                 wxdata.pos = c;
                 lefta = 1;
@@ -477,4 +581,9 @@ function fetchData(c) {
             });
         */
     }
+
+    let showPickerCoords = !refs.coordsPicker.classList.contains('checkbox--off');
+    if (showPickerCoords) coordsToFields(c);
 }
+
+export { vals };

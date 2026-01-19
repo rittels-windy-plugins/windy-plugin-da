@@ -11,7 +11,7 @@
             showInfo(name);
             focus(); // not sure,  but seems to make sense intuitively
         }}
-        style:cursor="pointer">Show density altitude settings</span
+        style:cursor="pointer">Show Multipicker settings</span
     >
     <div data-ref="messageDiv" class="hidden"></div>
 </div>
@@ -27,81 +27,116 @@
     <div bind:this={cornerHandleTop} data-ref="cornerHandleTop" class="corner-handle-top"></div>
 
     <div class="flex-container">
-        <div class="plugin__title">Elevation, Density Altitude and Multipicker</div>
+        <div class="plugin__title">Multipicker</div>
         <div class="scrollable">
-            <div>
-                <br />
-                Shows elevation at picker position.<br /><br />
-                The temperature, pressure (QNH) and dew point are loaded for the picker position.<br
-                />
-                <br />
-                The pressure altitude (PA), density altitude (DA) and DA corrected for dew point(DA_dp)
-                are then calculated.<br /><br />
-                Elevation is obtained from the Windy server,  and bathymetry  (1km resolution) from:
-                <a style="font-size:0.8em" href=" https://topex.ucsd.edu/WWW_html/srtm30_plus.html"
-                    ><u>https://topex.ucsd.edu/WWW_html/srtm30_plus.html</u></a
-                ><br /><br />
-                Calculations:<br /><br />
-                &nbsp;&nbsp;PA = elev + 27 x (1013-QNH)<br />
-                &nbsp;&nbsp;DA = PA + 118.8 x (temp-ISA)<br />
-                &nbsp;&nbsp;where ISA = 15 - 1.98 x PA/1000<br />
-                &nbsp;&nbsp;DA_dp = DA + 20 x Dew Point<br /><br />
-                <span style="font-size:8px">https://en.wikipedia.org/wiki/Density_altitude</span>
+            <div class="toggle-section checkbox off" on:click={toggleSection}>
+                Choose what to display in the picker:
             </div>
-            <br /><br />
-            <div>
-                <div class="header">
-                    Choose what to display on the left side of the picker (max&nbsp5):
+            <div class="section">
+                <table style="margin-bottom:5px">
+                    <tr><td>Left</td><td>Right</td></tr>
+                </table>
+                <table data-ref="choose">
+                    {#each vals as val}
+                        <tr>
+                            <td><div class="left checkbox"></div></td>
+                            <td><div class="right checkbox"></div></td>
+                            <td style="text-align: left;">
+                                <div>
+                                    {@html val.menu || val.txt}
+                                </div>
+                            </td>
+                        </tr>
+                    {/each}
+                </table>
+            </div>
+            <div class="toggle-section checkbox off" on:click={toggleSection}>Select Location:</div>
+            <div class="section">
+                <div class="sign-row">
+                    {#each [...'NSEW'] as s}
+                        <div
+                            class="NSEW"
+                            class:selected={svelteCoordSign[s].selected}
+                            on:click={changeSign}
+                            bind:this={svelteCoordSign[s].el}
+                        >
+                            {s}
+                        </div>
+                    {/each}
                 </div>
-                <div data-ref="choose">
-                    <div class="checkbox">QNH</div>
-                    <div class="checkbox">Temp</div>
-                    <div class="checkbox">Dew point</div>
-                    <div class="checkbox">Wet bulb (Calculated from Stull formula)</div>
-                    <div class="checkbox">&Delta;T = Temp - Wet bulb</div>
-                    <div class="checkbox">Humidity</div>
-                    <div class="checkbox">Rain</div>
-                    <div class="checkbox checkbox--off">Cloudbase</div>
-                    <!--<div class="checkbox checkbox--off">Wx code</div>-->
-                    <div class="checkbox checkbox--off">Wind</div>
-                    <div class="checkbox checkbox--off">Gust</div>
+                <div class="coordsTable">
+                    {#each Object.keys(coords).sort((a, b) => b.length - a.length) as key}
+                        <div class="dms loc-row">
+                            {#each ['lt', 'ln'] as ltln}
+                                <div>
+                                    {#each coords[key][ltln] as field, i}
+                                        <input
+                                            class="field"
+                                            data-ref={ltln + key + i}
+                                            type="text"
+                                            bind:this={svelteCoords[key][ltln][i].el}
+                                            on:input={handleCoordsInput}
+                                            on:keydown|stopPropagation={() => {}}
+                                        />
+                                    {/each}
+                                </div>
+                            {/each}
+                        </div>
+                    {/each}
                 </div>
+                <div
+                    data-ref="placePicker"
+                    class="button button--secondary"
+                    on:click={() => placePicker(marker)}
+                >
+                    Place picker
+                </div>
+                <br>
+                <div
+                    data-ref="paste"
+                    class="button button--secondary"
+                    on:click={() => {
+                        navigator.clipboard.readText().then(s => {
+                            let latlon = stringToLatLon(s);
+                            if (latlon == 'invalid') return;
+                            if (latlon.length !== 2) return;
+                            coordsToFields(latlon);
+                        });
+                    }}
+                >
+                    Paste coordinates from clipboard
+                </div>
+                <br>
+                
+                    <div
+                        data-ref="coordsPicker"
+                        class="checkbox"
+                        on:click={e => {
+                            e.currentTarget.classList.toggle('checkbox--off');
+                        }}
+                    >
+                        Show coords of the picker
+                    </div>
+                
+            </div>
+
+            <div class="toggle-section checkbox off" on:click={toggleSection}>
+                Change Picker settings:
+            </div>
+            <div class="section">
+                <div class="checkbox" data-ref="togglePickerElevation">
+                    Show elevetion in picker.
+                </div>
+                <div class="checkbox" data-ref="togglePickerCoordinates">
+                    Show coordinates below picker.
+                </div>
+            </div>
+            <div class="toggle-section checkbox off" on:click={toggleSection}>About:</div>
+            <div class="section">
+                <a href="https://rittels-windy-plugins.github.io/?density-alt"><u>https://rittels-windy-plugins.github.io/?density-alt</u></a>
             </div>
         </div>
-        <Footer />
-        <!--
-        <br /><br />
-        <div>
-            <div
-                class="toggle-section checkbox header off"
-                onclick="this.classList.toggle('off');"
-                class:off={false}
-            >
-                Weather codes (not comprehensive):
-            </div>
-            <div>
-                <div>
-                    <b>Sky conditions:</b> SKC:&nbsp0/8, FEW:&nbsp1-2/8, SCT:&nbsp3-4/8, BKN:&nbsp5-7/8,
-                    OVC:&nbsp8/8.
-                </div>
-                <div>
-                    <b>Clouds:</b> CU:&nbspCumulus, CB:&nbspCumulonimbus, ST:&nbspStratus, SC:&nbspStratocumulus,
-                    AC:&nbspAltocumulus, AS:&nbspAltostratus, NS:&nbspNimbostratus, CI:&nbspCirrus, CC:&nbspCirrocumulus,
-                    CS:&nbspCirrostratus
-                </div>
-                <div>
-                    <b>Obscuration:</b> BR:&nbspMist&nbsp(viz&#62;5/8sm), FG:&nbspFog&nbsp(viz&#60;5/8sm)
-                </div>
-                <div>
-                    <b>Precip quantifier:</b> <b>-</b>&nbsp:&nbspLight, <b>+</b>&nbsp:&nbspHeavy
-                </div>
-                <div>
-                    <b>Precipitation:</b> RA:&nbspRain, DZ:&nbspDrizzle, SN:&nbspSnow, FZ:&nbspFreezing,
-                    SH:&nbspShowers, TS:&nbspThundershowers
-                </div>
-            </div>
-        </div>
-    -->
+        <Footer onFooterClick={open => {}} />
     </div>
 </div>
 
@@ -111,8 +146,18 @@
     import { onDestroy, onMount } from 'svelte';
     import plugins from '@windy/plugins';
     import { map } from '@windy/map';
+    import store from '@windy/store';
 
-    import { init, closeCompletely } from './da_main.js';
+    import { init, closeCompletely, vals } from './da_main.js';
+    import {
+        coords,
+        coordSign,
+        changeSign,
+        handleCoordsInput,
+        placePicker,
+        coordsToFields,
+        stringToLatLon,
+    } from './coordinates.js';
     import {
         addDrag,
         showInfo,
@@ -128,6 +173,10 @@
     const { title, name } = config;
 
     const thisPlugin = plugins[name];
+
+    let svelteCoords = coords,
+        svelteCoordSign = coordSign;
+    console.log(svelteCoordSign);
     let node;
     let mainDiv;
     let cornerHandle, cornerHandleTop;
@@ -196,8 +245,16 @@
         else closeCompletely();
         ////
     });
+
+    function toggleSection(e) {
+        e.target.classList.toggle('off');
+        let str = [...mainDiv.querySelectorAll('.toggle-section')]
+            .map(e => (e.classList.contains('off') ? 1 : 0))
+            .join('');
+        store.set('plugin-da-sections', parseInt(str, 2));
+    }
 </script>
 
 <style lang="less">
-    @import 'da.less?1757837195756';
+    @import 'da.less?1768809264843';
 </style>
