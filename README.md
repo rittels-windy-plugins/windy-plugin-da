@@ -12,7 +12,7 @@ The temperature, pressure (QNH), and dew point are loaded for the picker positio
 
 The pressure altitude (PA), density altitude (DA) and DA corrected for dew point(DA_dp), are then calculated
 
-Elevation is obtained from the Windy server,  and bathymetry (1 km resolution) from: [https://topex.ucsd.edu/WWW_html/srtm30_plus.html](https://topex.ucsd.edu/WWW_html/srtm30_plus.html)
+Elevation is obtained from the Windy server,  and bathymetry (1 km resolution) from: [https://topex.ucsd.edu/WWW\_html/srtm30\_plus.html](https://topex.ucsd.edu/WWW_html/srtm30_plus.html)
 
 Calculations
 
