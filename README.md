@@ -23,9 +23,11 @@ Calculations
 
 [https://en.wikipedia.org/wiki/Density_altitude](https://en.wikipedia.org/wiki/Density_altitude)
 
-You can also select a few **other weather parameters** and display the coordinates of the picker position in different formats.  
+You can also select a few **other weather parameters** and **calculated parameters**:
 
-You can set the following **Windy Picker settings** from this plugin:  Elevation in the picker and Coordinates below the picker.  This is useful in mobile, since the plugin use the original style desktop picker.   
+- Wet bulb temperature calculated with the [Stull formula](https://journals.ametsoc.org/view/journals/apme/50/11/jamc-d-11-0143.1.xml).
+- Apparent temperature calculated with the [Steadman formula](https://en.wikipedia.org/wiki/Apparent_temperature).
+
 
 The plugin also contains a **coordinate converter** between:  DDD°MM'SS.S",  DDD°MM.MMM' and DDD.DDDDD°.
 
@@ -33,6 +35,8 @@ The plugin also contains a **coordinate converter** between:  DDD°MM'SS.S",  DD
 - Or paste coordinates,  they should be parsed and appear in the table.
 - You can place the picker at those coordinates.
 - The picker position can be reflected in the table.     
+
+You can set the following **Windy Picker settings** from this plugin:  Elevation in the picker and Coordinates below the picker.  This is useful in mobile, since the plugin use the original style desktop picker.   
 
 ### Path to this plugin:
 

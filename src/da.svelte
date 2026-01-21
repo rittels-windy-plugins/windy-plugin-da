@@ -133,7 +133,7 @@
             </div>
             <div class="toggle-section checkbox off" on:click={toggleSection}>About:</div>
             <div class="section">
-                <a href="https://rittels-windy-plugins.github.io/?density-alt"><u>https://rittels-windy-plugins.github.io/?density-alt</u></a>
+                <a href="https://rittels-windy-plugins.github.io?multipicker"><u>https://rittels-windy-plugins.github.io?multipicker</u></a>
             </div>
         </div>
         <Footer onFooterClick={open => {}} />
@@ -256,5 +256,5 @@
 </script>
 
 <style lang="less">
-    @import 'da.less?1768809264843';
+    @import 'da.less?1768981057032';
 </style>

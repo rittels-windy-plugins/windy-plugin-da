@@ -1,5 +1,3 @@
-console.log('RUNNING DA');
-
 import utils from '@windy/utils';
 import { map } from '@windy/map';
 import store from '@windy/store';
@@ -24,7 +22,7 @@ const { name } = config;
 const { $, getRefs } = utils;
 
 const { log } = console;
-const { round, pow, atan, sqrt, abs, trunc, sign } = Math;
+const { round, pow, atan, sqrt, abs, trunc, sign, exp } = Math;
 
 const ft2m = 0.3048;
 
@@ -202,6 +200,7 @@ let vals = [
     { metric: 'temp', txt: 'Dew Point' },
     { metric: 'temp', txt: 'Wet Bulb', menu: 'Wet Bulb (Stull formula)' },
     { metric: 'temp', txt: '&Delta;T', menu: '&Delta;T = Temp - Wet Bulb' },
+    { metric: 'temp', txt: 'Apparent T', menu: 'Apparent T (Steadman)' },
     { metric: 'rh', txt: 'Humidity' },
     { metric: 'rain', txt: 'Rain' },
     { metric: 'altitude', txt: 'Cloudbase' },
@@ -212,15 +211,17 @@ let vals = [
     { metric: '', txt: `DDD°MM.MMM'` },
     { metric: '', txt: `DDD.DDDDD°` },
 ];
-let nVals = vals.length;
+
+//  only have to add a parameter to vals,  the number does not have to specified for store etc
+let nVals = vals.length;   
 
 store.insert('plugin-da-selected-vals-left', {
-    def: parseInt('00001110001100000', 2),
+    def: parseInt('000011100011'.padEnd(nVals, '0'), 2),
     allowed: v => v >= 0 && v < pow(2, nVals),
     save: true,
 });
 store.insert('plugin-da-selected-vals-right', {
-    def: parseInt('11110000000000000', 2),
+    def: parseInt('1111'.padEnd(nVals, '0'), 2),
     allowed: v => v >= 0 && v < pow(2, nVals),
     save: true,
 });
@@ -232,7 +233,6 @@ store.insert('plugin-da-sections', {
 
 function getChoices(side) {
     let sv = store.get('plugin-da-selected-vals-' + side);
-    if (!(sv || sv === 0)) return Array(10).fill(0).fill(1, 0, 4);
     let choices = sv.toString(2).padStart(nVals, '0').split('').map(Number);
     return choices;
 }
@@ -407,15 +407,24 @@ function calculate() {
         let da = pa + 118.8 * (tempC - isa);
         let da_dp = da + da_corr_dp;
 
+        // Stull formula
         let wetBulb =
             tempC * atan(0.151977 * sqrt(rh + 8.313659)) +
             atan(tempC + rh) -
             atan(rh - 1.676331) +
             0.00391838 * pow(rh, 1.5) * atan(0.023101 * rh) -
             4.686035 -
-            K;
+            K;  // temps in K,   converted later
 
         let deltaT = temp - wetBulb - K;
+
+        // Steadman formula:
+        // vapour pressure e (hPa)
+        // e = (RH/100) * 6.105 * exp(17.27*T / (237.7 + T))
+        const e_hPa = (rh / 100) * 6.105 * exp((17.27 * tempC) / (237.7 + tempC));
+        // Steadman apparent temperature (°C)
+        // AT = T + 0.33e - 0.70v - 4.00
+        const apparentT = tempC + 0.33 * e_hPa - 0.7 * wind - 4.0 - K;  // temps in K,   converted later
 
         vals.forEach(e => {
             // prettier-ignore
@@ -429,6 +438,7 @@ function calculate() {
                 case 'Dew Point':          e.v = dewPoint;        break;
                 case 'Wet Bulb':           e.v = wetBulb;         break;
                 case '&Delta;T':           e.v = deltaT;          break;
+                case 'Apparent T':         e.v = apparentT;       break;
                 case 'Humidity':           e.v = rh;              break;
                 case 'Rain':               e.v = rain;            break;
                 case 'Cloudbase':          e.v = cbase;           break;
