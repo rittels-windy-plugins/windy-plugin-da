@@ -1,6 +1,6 @@
 const config = {
     name: 'windy-plugin-da',
-    version: '0.2.16',
+    version: '0.2.17',
     icon: '⛰',
     title: 'Multipicker',
     description: 'The picker shows the density altitude and other information,  provides a multi-picker.',

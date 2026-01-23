@@ -42,7 +42,9 @@ function logMessage(msg) {
 function init(plgn) {
     thisPlugin = plgn;
 
-    ({ node } = plgn.window);
+    node = $('#plugin-' + thisPlugin.ident);
+    //({ node } = plgn.window);  // .window may not exist yet,  if opened with onopen
+
     ({ refs } = getRefs(node));
 
     // important to close picker
@@ -213,7 +215,7 @@ let vals = [
 ];
 
 //  only have to add a parameter to vals,  the number does not have to specified for store etc
-let nVals = vals.length;   
+let nVals = vals.length;
 
 store.insert('plugin-da-selected-vals-left', {
     def: parseInt('000011100011'.padEnd(nVals, '0'), 2),
@@ -414,7 +416,7 @@ function calculate() {
             atan(rh - 1.676331) +
             0.00391838 * pow(rh, 1.5) * atan(0.023101 * rh) -
             4.686035 -
-            K;  // temps in K,   converted later
+            K; // temps in K,   converted later
 
         let deltaT = temp - wetBulb - K;
 
@@ -424,7 +426,7 @@ function calculate() {
         const e_hPa = (rh / 100) * 6.105 * exp((17.27 * tempC) / (237.7 + tempC));
         // Steadman apparent temperature (°C)
         // AT = T + 0.33e - 0.70v - 4.00
-        const apparentT = tempC + 0.33 * e_hPa - 0.7 * wind - 4.0 - K;  // temps in K,   converted later
+        const apparentT = tempC + 0.33 * e_hPa - 0.7 * wind - 4.0 - K; // temps in K,   converted later
 
         vals.forEach(e => {
             // prettier-ignore

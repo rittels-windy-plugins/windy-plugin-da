@@ -91,7 +91,7 @@
                 >
                     Place picker
                 </div>
-                <br>
+                <br />
                 <div
                     data-ref="paste"
                     class="button button--secondary"
@@ -106,18 +106,17 @@
                 >
                     Paste coordinates from clipboard
                 </div>
-                <br>
-                
-                    <div
-                        data-ref="coordsPicker"
-                        class="checkbox"
-                        on:click={e => {
-                            e.currentTarget.classList.toggle('checkbox--off');
-                        }}
-                    >
-                        Show coords of the picker
-                    </div>
-                
+                <br />
+
+                <div
+                    data-ref="coordsPicker"
+                    class="checkbox"
+                    on:click={e => {
+                        e.currentTarget.classList.toggle('checkbox--off');
+                    }}
+                >
+                    Show coords of the picker
+                </div>
             </div>
 
             <div class="toggle-section checkbox off" on:click={toggleSection}>
@@ -133,7 +132,9 @@
             </div>
             <div class="toggle-section checkbox off" on:click={toggleSection}>About:</div>
             <div class="section">
-                <a href="https://rittels-windy-plugins.github.io?multipicker"><u>https://rittels-windy-plugins.github.io?multipicker</u></a>
+                <a href="https://rittels-windy-plugins.github.io?multipicker"
+                    ><u>https://rittels-windy-plugins.github.io?multipicker</u></a
+                >
             </div>
         </div>
         <Footer onFooterClick={open => {}} />
@@ -172,6 +173,8 @@
     import config from './pluginConfig.js';
     const { title, name } = config;
 
+    const { log } = console;
+
     const thisPlugin = plugins[name];
 
     let svelteCoords = coords,
@@ -206,7 +209,7 @@
 
     onMount(() => {
         init(thisPlugin);
-        node = thisPlugin.window.node;
+        node = document.getElementById('plugin-' + thisPlugin.ident);
 
         const wrapDiv = getWrapDiv();
         wrapDiv.appendChild(mainDiv);
@@ -256,5 +259,5 @@
 </script>
 
 <style lang="less">
-    @import 'da.less?1768981057032';
+    @import 'da.less?1769183106111';
 </style>
