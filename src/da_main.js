@@ -42,7 +42,7 @@ function logMessage(msg) {
 function init(plgn) {
     thisPlugin = plgn;
 
-    node = $('#plugin-' + thisPlugin.ident);
+    node = document.getElementById('plugin-' + thisPlugin.ident);
     //({ node } = plgn.window);  // .window may not exist yet,  if opened with onopen
 
     ({ refs } = getRefs(node));
@@ -387,6 +387,8 @@ function calculate() {
                 }
             }
         }
+
+        
         let wind = d.wind[ix],
             gust = d.gust[ix],
             windDir = d.windDir[ix],

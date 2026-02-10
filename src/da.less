@@ -48,6 +48,7 @@
                 display: flex;
                 justify-content: space-evenly;
                 gap: 3px;
+                max-width: 400px;
                 .NSEW {
                     flex: 1;
                     border: 1px solid rgba(255, 255, 255, 0.3);
@@ -58,6 +59,7 @@
                     line-height: 16px;
                     background-color: rgba(0, 0, 0, 0.2);
                     cursor: pointer;
+
                     &.selected {
                         border-color: white;
                     }
@@ -70,12 +72,13 @@
                 width: 100%;
                 min-width: 100px;
                 justify-content: flex-start;
+                gap: 3px;
                 & > div {
                     flex: 1;
                     div {
                         border: 1px solid white;
                         border-radius: 3px;
-                        margin: 3px;
+                        margin: 3px 0;
                     }
                     display: flex;
                     min-width: 100px;
