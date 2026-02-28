@@ -399,6 +399,8 @@ function calculate() {
             }
         }
 
+        pickerT.fillRightDiv("ix "+ix)
+
         let wind = d.wind[ix],
             gust = d.gust[ix],
             windDir = d.windDir[ix],
@@ -470,6 +472,7 @@ function calculate() {
                 : '';
 
         let pickerDivs = { ldiv: 'left<br>', rdiv: 'right<br>' };
+        pickerT.fillRightDiv("right  "+pickerDivs.rdiv)
 
         /*
         vals.forEach(({ metric, txt, v }, i) => {
@@ -572,7 +575,7 @@ function fetchData(c) {
             .getPointForecastData(product, c)
             .then(data => {
                 wxdata = data;
-                pickerT.fillRightDiv(JSON.stringify(data, null, 1), true);
+                //pickerT.fillRightDiv(JSON.stringify(data, null, 1), true);
                 wxdata.pos = c;
                 lefta = 1;
                 setTimeout(() => (datafnd = true), 150);
