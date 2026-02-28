@@ -500,7 +500,7 @@ function calculate() {
 }
 
 function fetchData(c) {
-    console.error("SOURCE", source);
+    console.error("SOURCE", c, JSON.stringify(c));
     if (c.source == 'picker') return; // only react on custom-picker
 
     lastpos = c;
