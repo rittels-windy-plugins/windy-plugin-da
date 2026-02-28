@@ -412,6 +412,8 @@ function calculate() {
             temp = d.temp[ix];
         //weathercode = d.weathercode[ix];
 
+        pickerT.fillRightDiv("wind", d.wind[ix]);
+        
         /** pressureC in hPa */
         let pressureC = round(pressure) / 100;
         let tempC = round((temp + K) * 10) / 10;
