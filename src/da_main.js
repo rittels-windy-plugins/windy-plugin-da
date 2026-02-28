@@ -352,12 +352,14 @@ function onChoose(e) {
 }
 
 function calculate() {
+    console.log(wxdata)
+    pickerT.fillRightDiv("WX " +JSON.stringify(wxdata))
     if (!wxdata){
-        if (pickerT.getRightPlugin() == name)
-            pickerT.fillRightDiv(
-                "No Wx Data"
+        //if (pickerT.getRightPlugin() == name)
+        //    pickerT.fillRightDiv(
+        //        "No Wx Data"
             
-            );
+        //    );
     }
     if (wxdata) {
         elevPntFcst = wxdata.data.header.elevation;
