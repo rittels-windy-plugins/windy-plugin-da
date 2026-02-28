@@ -399,22 +399,24 @@ function calculate() {
             }
         }
 
-        pickerT.fillRightDiv("ix "+ix)
+        pickerT.fillRightDiv('ix ' + ix);
 
-        pickerT.fillRightDiv(d.wind[ix])
+        pickerT.fillRightDiv(d.wind[ix]);
 
-        let wind = d.wind[ix],
-            gust = d.gust[ix],
-            windDir = d.windDir[ix],
-            rain = d.rain[ix],
-            cbase = d.cbase[ix],
-            rh = d.rh[ix],
+        let wind = d.wind[ix];
+        let gust = d.gust[ix];
+        let windDir = d.windDir[ix];
+        let rain = d.rain[ix];
+        let cbase = d.cbase[ix];
+
+        pickerT.fillRightDiv('cbs  ' + cbase);
+        let rh = d.rh[ix],
             pressure = d.pressure[ix],
             dewPoint = d.dewPoint[ix],
             temp = d.temp[ix];
         //weathercode = d.weathercode[ix];
 
-        pickerT.fillRightDiv("wind " + d.wind[ix]);
+        pickerT.fillRightDiv('wind ' + d.wind[ix]);
 
         /** pressureC in hPa */
         let pressureC = round(pressure) / 100;
@@ -476,7 +478,7 @@ function calculate() {
                 : '';
 
         let pickerDivs = { ldiv: 'left<br>', rdiv: 'right<br>' };
-        pickerT.fillRightDiv("right  "+pickerDivs.rdiv)
+        pickerT.fillRightDiv('right  ' + pickerDivs.rdiv);
 
         /*
         vals.forEach(({ metric, txt, v }, i) => {
