@@ -353,7 +353,11 @@ function onChoose(e) {
 
 function calculate() {
     console.log(wxdata)
-    pickerT.fillRightDiv("WX " +JSON.stringify(wxdata))
+    pickerT.fillRightDiv(
+        "WX " +JSON.stringify(wxdata)+"<br>"+
+        "ts"+ts+"<br>"+
+        wxdata.data.data.temp[0]
+    )
     if (!wxdata){
         //if (pickerT.getRightPlugin() == name)
         //    pickerT.fillRightDiv(
@@ -506,7 +510,7 @@ function fetchData(c) {
      pickerT.fillLeftDiv(JSON.stringify(c, null, 1), true);
     if (c.source == 'picker') return; // only react on custom-picker
 
-     pickerT.fillRightDiv(c.source, true);
+    
     lastpos = c;
     //  c.model = prod;
     lefta -= 0.05;
