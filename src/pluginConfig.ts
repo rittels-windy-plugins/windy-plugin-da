@@ -2,7 +2,7 @@ import type { ExternalPluginConfig } from '@windy/interfaces';
 
 const config: ExternalPluginConfig = {
     name: 'windy-plugin-da',
-    version: '0.3.9',
+    version: '0.3.10',
     icon: '⛰',
     title: 'Multipicker',
     description:

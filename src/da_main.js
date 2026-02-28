@@ -500,10 +500,11 @@ function calculate() {
 }
 
 function fetchData(c) {
-    console.error("SOURCE", c, JSON.stringify(c));
-     pickerT.fillLeftDiv(JSON.stringify(c), true);
+    console.error("SOURCE", c, JSON.stringify(c, null, 1));
+     pickerT.fillLeftDiv(JSON.stringify(c, null, 1), true);
     if (c.source == 'picker') return; // only react on custom-picker
 
+     pickerT.fillRightDiv(c.source, true);
     lastpos = c;
     //  c.model = prod;
     lefta -= 0.05;
@@ -564,9 +565,11 @@ function fetchData(c) {
         c.step = 1;
         let product = store.get('product');
         if (product == 'topoMap') product = 'ecmwf';
+        pickerT.fillRightDiv("fetching", true);
         windyFetch
             .getPointForecastData(product, c)
             .then(data => {
+                pickerT.fillRightDiv("data found" , true);
                 wxdata = data;
                 wxdata.pos = c;
                 lefta = 1;
