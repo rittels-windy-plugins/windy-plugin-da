@@ -352,6 +352,13 @@ function onChoose(e) {
 }
 
 function calculate() {
+    if (!wxdata){
+        if (pickerT.getRightPlugin() == name)
+            pickerT.fillRightDiv(
+                "No Wx Data"
+            
+            );
+    }
     if (wxdata) {
         elevPntFcst = wxdata.data.header.elevation;
 
@@ -478,11 +485,11 @@ function calculate() {
             pickerDivs[div] += '<br>';
         });
 
-       // if (pickerT.getLeftPlugin() == name)
+        if (pickerT.getLeftPlugin() == name)
             pickerT.fillLeftDiv(pickerDivs.ldiv, true);
         //pickerT.showLeftDiv();
 
-       // if (pickerT.getRightPlugin() == name)
+        if (pickerT.getRightPlugin() == name)
             pickerT.fillRightDiv(
                 pickerDivs.rdiv
             
