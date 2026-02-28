@@ -478,11 +478,11 @@ function calculate() {
             pickerDivs[div] += '<br>';
         });
 
-        if (pickerT.getLeftPlugin() == name)
+       // if (pickerT.getLeftPlugin() == name)
             pickerT.fillLeftDiv(pickerDivs.ldiv, true);
         //pickerT.showLeftDiv();
 
-        if (pickerT.getRightPlugin() == name)
+       // if (pickerT.getRightPlugin() == name)
             pickerT.fillRightDiv(
                 pickerDivs.rdiv
             
