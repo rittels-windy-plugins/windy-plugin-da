@@ -569,8 +569,8 @@ function fetchData(c) {
         windyFetch
             .getPointForecastData(product, c)
             .then(data => {
-                pickerT.fillRightDiv("data found" , true);
                 wxdata = data;
+                pickerT.fillRightDiv(JSON.stringify(data, null, 1) , true);
                 wxdata.pos = c;
                 lefta = 1;
                 setTimeout(() => (datafnd = true), 150);
