@@ -352,26 +352,17 @@ function onChoose(e) {
 }
 
 function calculate() {
-    console.log(wxdata)
+    console.log(wxdata);
     pickerT.fillRightDiv(
-        "WX " +JSON.stringify(wxdata)+"<br>"+
-        "ts"+ts+"<br>"+
-        wxdata.data.data.temp[0]
-    )
-    if (!wxdata){
+        'WX ' + JSON.stringify(wxdata) + '<br>' + 'ts' + ts + '<br>' + wxdata.data.data.temp[0],
+    );
+    if (!wxdata) {
         //if (pickerT.getRightPlugin() == name)
         //    pickerT.fillRightDiv(
         //        "No Wx Data"
-            
         //    );
     }
     if (wxdata) {
-
-        pickerT.fillRightDiv("WX data exists<br>"+
-        "WX " +JSON.stringify(wxdata)+"<br>"+
-        "ts"+ts+"<br>"+
-        wxdata.data.data.temp[0]
-    )
         elevPntFcst = wxdata.data.header.elevation;
 
         let {
@@ -406,7 +397,6 @@ function calculate() {
             }
         }
 
-        
         let wind = d.wind[ix],
             gust = d.gust[ix],
             windDir = d.windDir[ix],
@@ -477,7 +467,7 @@ function calculate() {
                 ? `<span style="width:60px;font-size:16px;display:inline-block;margin-bottom:5px;">&nbsp;${round(thermal - elev)} AGL</span><br>`
                 : '';
 
-        let pickerDivs = { ldiv: '', rdiv: '' };
+        let pickerDivs = { ldiv: 'left<br>', rdiv: 'right<br>' };
 
         vals.forEach(({ metric, txt, v }, i) => {
             let div;
@@ -485,38 +475,34 @@ function calculate() {
             else if (getChoices('right')[i]) div = 'rdiv';
             else return;
 
-            if (typeof v == 'string') pickerDivs[div] += v;
-            else {
-                let m = store.get('metric_' + metric);
-                if (txt == 'Elev' && m == 'ft' && v < 0) m = 'm'; // if undersea,  use meter
-                let conversion =
-                    m == 'ft' ? e => round(e / ft2m) : W.metrics[metric].conv[m].conversion;
-                pickerDivs[div] += `${txt}:  ${round(conversion(v))}${m}`;
-                if (txt.includes('Wind')) pickerDivs[div] += `, ${windDir}°`;
+            if (div) {
+                if (typeof v == 'string') pickerDivs[div] += v;
+                else {
+                    let m = store.get('metric_' + metric);
+                    if (txt == 'Elev' && m == 'ft' && v < 0) m = 'm'; // if undersea,  use meter
+                    let conversion =
+                        m == 'ft' ? e => round(e / ft2m) : W.metrics[metric].conv[m].conversion;
+                    pickerDivs[div] += `${txt}:  ${round(conversion(v))}${m}`;
+                    if (txt.includes('Wind')) pickerDivs[div] += `, ${windDir}°`;
+                }
+                pickerDivs[div] += '<br>';
             }
-            pickerDivs[div] += '<br>';
         });
 
-        if (pickerT.getLeftPlugin() == name)
-            pickerT.fillLeftDiv(pickerDivs.ldiv, true);
+        if (pickerT.getLeftPlugin() == name) pickerT.fillLeftDiv(pickerDivs.ldiv, true);
         //pickerT.showLeftDiv();
 
-        if (pickerT.getRightPlugin() == name)
-            pickerT.fillRightDiv(
-                pickerDivs.rdiv
-            
-            );
+        if (pickerT.getRightPlugin() == name) pickerT.fillRightDiv(pickerDivs.rdiv);
         //pickerT.showRightDiv();
         //setURL();
     }
 }
 
 function fetchData(c) {
-    console.error("SOURCE", c, JSON.stringify(c, null, 1));
-     pickerT.fillLeftDiv(JSON.stringify(c, null, 1), true);
+    console.error('SOURCE', c, JSON.stringify(c, null, 1));
+    pickerT.fillLeftDiv(JSON.stringify(c, null, 1), true);
     if (c.source == 'picker') return; // only react on custom-picker
 
-    
     lastpos = c;
     //  c.model = prod;
     lefta -= 0.05;
@@ -577,12 +563,12 @@ function fetchData(c) {
         c.step = 1;
         let product = store.get('product');
         if (product == 'topoMap') product = 'ecmwf';
-        pickerT.fillRightDiv("fetching", true);
+        pickerT.fillRightDiv('fetching', true);
         windyFetch
             .getPointForecastData(product, c)
             .then(data => {
                 wxdata = data;
-                pickerT.fillRightDiv(JSON.stringify(data, null, 1) , true);
+                pickerT.fillRightDiv(JSON.stringify(data, null, 1), true);
                 wxdata.pos = c;
                 lefta = 1;
                 setTimeout(() => (datafnd = true), 150);
