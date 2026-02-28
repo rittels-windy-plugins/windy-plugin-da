@@ -484,23 +484,8 @@ function calculate() {
 
         if (pickerT.getRightPlugin() == name)
             pickerT.fillRightDiv(
-                pickerDivs.rdiv,
-
-                /*
-                `
-        <div>
-            ${thermalspan}
-            <span style="width:45px;display:inline-block;">${elp.elev > 0 ? 'Elev:' : 'Depth'}</span>${
-                elp.elev > 0 ? elev + '&nbspft' : round(elp.elev) + '&nbspm'
-            }<br>
-            <span style="width:45px;display:inline-block;">PA:</span>${round(pa)}&nbspft<br>
-            <span style="width:45px;display:inline-block;">DA:</span>${round(da)}&nbspft<br>
-            <span style="color:white">
-            <span style="width:45px;display:inline-block;">DA_dp:</span>${round(da_dp)}&nbspft
-            </span>
-        <div>`
-        */
-            ,
+                pickerDivs.rdiv
+            
             );
         //pickerT.showRightDiv();
         //setURL();
