@@ -366,6 +366,12 @@ function calculate() {
         //    );
     }
     if (wxdata) {
+
+        pickerT.fillRightDiv("WX data exists<br>"+
+        "WX " +JSON.stringify(wxdata)+"<br>"+
+        "ts"+ts+"<br>"+
+        wxdata.data.data.temp[0]
+    )
         elevPntFcst = wxdata.data.header.elevation;
 
         let {
