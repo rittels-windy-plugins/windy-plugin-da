@@ -401,6 +401,8 @@ function calculate() {
 
         pickerT.fillRightDiv("ix "+ix)
 
+        pickerT.fillRightDiv(d.wind[ix])
+
         let wind = d.wind[ix],
             gust = d.gust[ix],
             windDir = d.windDir[ix],
@@ -412,8 +414,8 @@ function calculate() {
             temp = d.temp[ix];
         //weathercode = d.weathercode[ix];
 
-        pickerT.fillRightDiv("wind", d.wind[ix]);
-        
+        pickerT.fillRightDiv("wind " + d.wind[ix]);
+
         /** pressureC in hPa */
         let pressureC = round(pressure) / 100;
         let tempC = round((temp + K) * 10) / 10;
