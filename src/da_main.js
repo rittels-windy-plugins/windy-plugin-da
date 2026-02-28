@@ -353,9 +353,11 @@ function onChoose(e) {
 
 function calculate() {
     console.log(wxdata);
+    /*
     pickerT.fillRightDiv(
         'WX ' + JSON.stringify(wxdata) + '<br>' + 'ts' + ts + '<br>' + wxdata.data.data.temp[0],
     );
+    */
     if (!wxdata) {
         //if (pickerT.getRightPlugin() == name)
         //    pickerT.fillRightDiv(
@@ -469,6 +471,7 @@ function calculate() {
 
         let pickerDivs = { ldiv: 'left<br>', rdiv: 'right<br>' };
 
+        /*
         vals.forEach(({ metric, txt, v }, i) => {
             let div;
             if (getChoices('left')[i]) div = 'ldiv';
@@ -488,6 +491,7 @@ function calculate() {
                 pickerDivs[div] += '<br>';
             }
         });
+        */
 
         if (pickerT.getLeftPlugin() == name) pickerT.fillLeftDiv(pickerDivs.ldiv, true);
         //pickerT.showLeftDiv();
@@ -500,7 +504,7 @@ function calculate() {
 
 function fetchData(c) {
     console.error('SOURCE', c, JSON.stringify(c, null, 1));
-    pickerT.fillLeftDiv(JSON.stringify(c, null, 1), true);
+    //pickerT.fillLeftDiv(JSON.stringify(c, null, 1), true);
     if (c.source == 'picker') return; // only react on custom-picker
 
     lastpos = c;
@@ -563,7 +567,7 @@ function fetchData(c) {
         c.step = 1;
         let product = store.get('product');
         if (product == 'topoMap') product = 'ecmwf';
-        pickerT.fillRightDiv('fetching', true);
+        //pickerT.fillRightDiv('fetching', true);
         windyFetch
             .getPointForecastData(product, c)
             .then(data => {
