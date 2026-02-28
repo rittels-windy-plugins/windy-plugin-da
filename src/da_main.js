@@ -43,7 +43,6 @@ function init(plgn) {
     thisPlugin = plgn;
 
     node = document.getElementById('plugin-' + thisPlugin.ident);
-    //({ node } = plgn.window);  // .window may not exist yet,  if opened with onopen
 
     ({ refs } = getRefs(node));
 
@@ -480,7 +479,7 @@ function calculate() {
         });
 
         if (pickerT.getLeftPlugin() == name)
-            pickerT.fillLeftDiv(pickerDivs.ldiv, true, { 'flex-basis': '50%' });
+            pickerT.fillLeftDiv(pickerDivs.ldiv, true);
         //pickerT.showLeftDiv();
 
         if (pickerT.getRightPlugin() == name)
@@ -501,7 +500,7 @@ function calculate() {
             </span>
         <div>`
         */
-                { 'flex-basis': '50%' },
+            ,
             );
         //pickerT.showRightDiv();
         //setURL();
