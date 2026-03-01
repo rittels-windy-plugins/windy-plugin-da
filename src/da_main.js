@@ -352,7 +352,7 @@ function onChoose(e) {
 }
 
 function calculate() {
-    console.log(Object.keys(wxdata.data.data).join('<br>'));
+    //console.log(Object.keys(wxdata.data.data).join('<br>'));
     /*
     pickerT.fillRightDiv(
         'WX ' + JSON.stringify(wxdata) + '<br>' + 'ts' + ts + '<br>' + wxdata.data.data.temp[0],
@@ -399,7 +399,7 @@ function calculate() {
             }
         }
 
-        pickerT.fillRightDiv(Object.keys(wxdata.data.data).join('<br>'));
+        //pickerT.fillRightDiv(Object.keys(wxdata.data.data).join('<br>'));
 
         let wind = d.wind ? d.wind[ix] : 'No wind data';
         let gust = d.gust ? d.gust[ix] : 'No gust data';
@@ -503,7 +503,7 @@ function calculate() {
 }
 
 function fetchData(c) {
-    console.error('SOURCE', c, JSON.stringify(c, null, 1));
+    //console.error('SOURCE', c, JSON.stringify(c, null, 1));
     //pickerT.fillLeftDiv(JSON.stringify(c, null, 1), true);
     if (c.source == 'picker') return; // only react on custom-picker
 

@@ -217,7 +217,7 @@
 
             makeBottomRightHandle(cornerHandle, mainDiv);
             makeTopLeftHandle(cornerHandleTop, mainDiv);
-            //embedForTablet(thisPlugin);
+            embedForTablet(thisPlugin);
 
             //// this should not be needed later
             node.querySelector(':scope > .closing-x').addEventListener(
@@ -264,5 +264,5 @@
 </script>
 
 <style lang="less">
-    @import 'da.less?1772385396995';
+    @import 'da.less?1772391502722';
 </style>
