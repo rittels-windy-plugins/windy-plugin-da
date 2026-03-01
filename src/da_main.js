@@ -352,7 +352,7 @@ function onChoose(e) {
 }
 
 function calculate() {
-    console.log(wxdata);
+    console.log(Object.keys(wxdata.data.data).join('<br>'));
     /*
     pickerT.fillRightDiv(
         'WX ' + JSON.stringify(wxdata) + '<br>' + 'ts' + ts + '<br>' + wxdata.data.data.temp[0],
@@ -399,30 +399,18 @@ function calculate() {
             }
         }
 
-        pickerT.fillRightDiv('ix ' + ix);
-
-        pickerT.fillRightDiv(d.wind[ix]);
-
+        pickerT.fillRightDiv(Object.keys(wxdata.data.data).join('<br>'));
+        
         let wind = d.wind[ix];
-
-        pickerT.fillRightDiv('wind ' + wind);
-
         let gust = d.gust[ix];
-        pickerT.fillRightDiv('gust ' + gust);
         let windDir = d.windDir[ix];
-        pickerT.fillRightDiv('windDir ' + windDir);
         let rain = d.rain[ix];
-        pickerT.fillRightDiv('rain ' + rain);
         let cbase = !d.cbase ? 'No cbase data' : d.cbase[ix] == null ? 'No cloud' : d.cbase[ix];
-
-        pickerT.fillRightDiv('cbs  '+cbase );
         let rh = d.rh[ix],
             pressure = d.pressure[ix],
             dewPoint = d.dewPoint[ix],
             temp = d.temp[ix];
         //weathercode = d.weathercode[ix];
-
-        //pickerT.fillRightDiv('wind ' + d.wind[ix]);
 
         /** pressureC in hPa */
         let pressureC = round(pressure) / 100;
