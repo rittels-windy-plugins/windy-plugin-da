@@ -415,7 +415,7 @@ function calculate() {
         pickerT.fillRightDiv('rain ' + rain);
         let cbase = !d.cbase ? 'No cbase data' : d.cbase[ix] == null ? 'No cloud' : d.cbase[ix];
 
-        pickerT.fillRightDiv('cbs  ' );
+        pickerT.fillRightDiv('cbs  '+cbase );
         let rh = d.rh[ix],
             pressure = d.pressure[ix],
             dewPoint = d.dewPoint[ix],
