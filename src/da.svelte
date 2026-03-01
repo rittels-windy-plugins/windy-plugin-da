@@ -216,7 +216,7 @@
 
         makeBottomRightHandle(cornerHandle, mainDiv);
         makeTopLeftHandle(cornerHandleTop, mainDiv);
-        embedForTablet(thisPlugin);
+        //embedForTablet(thisPlugin);
 
         //// this should not be needed later
         node.querySelector(':scope > .closing-x').addEventListener(
