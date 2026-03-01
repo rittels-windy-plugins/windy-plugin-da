@@ -405,17 +405,17 @@ function calculate() {
 
         let wind = d.wind[ix];
 
-        pickerT.fillRightDiv("wind "+wind);
+        pickerT.fillRightDiv('wind ' + wind);
 
         let gust = d.gust[ix];
-        pickerT.fillRightDiv("gust "+gust);
+        pickerT.fillRightDiv('gust ' + gust);
         let windDir = d.windDir[ix];
-        pickerT.fillRightDiv("windDir "+windDir);
+        pickerT.fillRightDiv('windDir ' + windDir);
         let rain = d.rain[ix];
-        pickerT.fillRightDiv("rain " + rain);
-        let cbase = d.cbase[ix] == null? "No cloud" : d.cbase[ix];
+        pickerT.fillRightDiv('rain ' + rain);
+        let cbase = !d.cbase ? 'No cbase data' : d.cbase[ix] == null ? 'No cloud' : d.cbase[ix];
 
-        pickerT.fillRightDiv('cbs  ' + cbase);
+        pickerT.fillRightDiv('cbs  ' );
         let rh = d.rh[ix],
             pressure = d.pressure[ix],
             dewPoint = d.dewPoint[ix],
@@ -508,10 +508,10 @@ function calculate() {
         });
         */
 
-       // if (pickerT.getLeftPlugin() == name) pickerT.fillLeftDiv(pickerDivs.ldiv, true);
+        // if (pickerT.getLeftPlugin() == name) pickerT.fillLeftDiv(pickerDivs.ldiv, true);
         //pickerT.showLeftDiv();
 
-       // if (pickerT.getRightPlugin() == name) pickerT.fillRightDiv(pickerDivs.rdiv);
+        // if (pickerT.getRightPlugin() == name) pickerT.fillRightDiv(pickerDivs.rdiv);
         //pickerT.showRightDiv();
         //setURL();
     }
