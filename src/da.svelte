@@ -208,6 +208,7 @@
     }
 
     onMount(() => {
+        try{
         init(thisPlugin);
         node = document.getElementById('plugin-' + thisPlugin.ident);
 
@@ -228,6 +229,11 @@
         focus();
         thisPlugin.focus = focus;
         thisPlugin.defocus = defocus;
+        
+        } catch (e){
+    
+            W.errorLogger.sentErrors.push({msg:e.message, stack:e.stack})
+        }
     });
 
     export const onopen = _params => {
@@ -259,5 +265,5 @@
 </script>
 
 <style lang="less">
-    @import 'da.less?1772354806450';
+    @import 'da.less?1772385396995';
 </style>
