@@ -405,10 +405,14 @@ function calculate() {
 
         let wind = d.wind[ix];
 
-        
+        pickerT.fillRightDiv("wind "+wind);
+
         let gust = d.gust[ix];
+        pickerT.fillRightDiv("gust "+gust);
         let windDir = d.windDir[ix];
+        pickerT.fillRightDiv("windDir "+windDir);
         let rain = d.rain[ix];
+        pickerT.fillRightDiv("rain " + rain);
         let cbase = d.cbase[ix];
 
         pickerT.fillRightDiv('cbs  ' + cbase);
