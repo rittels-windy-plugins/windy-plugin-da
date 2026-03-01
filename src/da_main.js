@@ -413,7 +413,7 @@ function calculate() {
         pickerT.fillRightDiv("windDir "+windDir);
         let rain = d.rain[ix];
         pickerT.fillRightDiv("rain " + rain);
-        let cbase = d.cbase[ix];
+        let cbase = d.cbase[ix] == null? "No cloud" : d.cbase[ix];
 
         pickerT.fillRightDiv('cbs  ' + cbase);
         let rh = d.rh[ix],
@@ -422,7 +422,7 @@ function calculate() {
             temp = d.temp[ix];
         //weathercode = d.weathercode[ix];
 
-        pickerT.fillRightDiv('wind ' + d.wind[ix]);
+        //pickerT.fillRightDiv('wind ' + d.wind[ix]);
 
         /** pressureC in hPa */
         let pressureC = round(pressure) / 100;
@@ -484,7 +484,7 @@ function calculate() {
                 : '';
 
         let pickerDivs = { ldiv: 'left<br>', rdiv: 'right<br>' };
-        pickerT.fillRightDiv('right  ' + pickerDivs.rdiv);
+        //pickerT.fillRightDiv('right  ' + pickerDivs.rdiv);
 
         /*
         vals.forEach(({ metric, txt, v }, i) => {
@@ -508,10 +508,10 @@ function calculate() {
         });
         */
 
-        if (pickerT.getLeftPlugin() == name) pickerT.fillLeftDiv(pickerDivs.ldiv, true);
+       // if (pickerT.getLeftPlugin() == name) pickerT.fillLeftDiv(pickerDivs.ldiv, true);
         //pickerT.showLeftDiv();
 
-        if (pickerT.getRightPlugin() == name) pickerT.fillRightDiv(pickerDivs.rdiv);
+       // if (pickerT.getRightPlugin() == name) pickerT.fillRightDiv(pickerDivs.rdiv);
         //pickerT.showRightDiv();
         //setURL();
     }
