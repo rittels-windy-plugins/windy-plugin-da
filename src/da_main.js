@@ -400,16 +400,16 @@ function calculate() {
         }
 
         pickerT.fillRightDiv(Object.keys(wxdata.data.data).join('<br>'));
-        
-        let wind = d.wind[ix];
-        let gust = d.gust[ix];
-        let windDir = d.windDir[ix];
-        let rain = d.rain[ix];
+
+        let wind = d.wind ? d.wind[ix] : 'No wind data';
+        let gust = d.gust ? d.gust[ix] : 'No gust data';
+        let windDir = d.windDir ? d.windDir[ix] : 'No windDir data';
+        let rain = d.rain ? d.rain[ix] : 'No rain data';
         let cbase = !d.cbase ? 'No cbase data' : d.cbase[ix] == null ? 'No cloud' : d.cbase[ix];
-        let rh = d.rh[ix],
-            pressure = d.pressure[ix],
-            dewPoint = d.dewPoint[ix],
-            temp = d.temp[ix];
+        let rh = d.rh ? d.rh[ix] : 'No rh data';
+        let pressure = d.pressure ? d.pressure[ix] : 'No pressure data';
+        let dewPoint = d.dewPoint ? d.dewPoint[ix] : 'No dewPoint data';
+        let temp = d.temp ? d.temp[ix] : 'No temp data';
         //weathercode = d.weathercode[ix];
 
         /** pressureC in hPa */
@@ -471,10 +471,8 @@ function calculate() {
                 ? `<span style="width:60px;font-size:16px;display:inline-block;margin-bottom:5px;">&nbsp;${round(thermal - elev)} AGL</span><br>`
                 : '';
 
-        let pickerDivs = { ldiv: 'left<br>', rdiv: 'right<br>' };
-        //pickerT.fillRightDiv('right  ' + pickerDivs.rdiv);
+        let pickerDivs = { ldiv: '', rdiv: '' };
 
-        /*
         vals.forEach(({ metric, txt, v }, i) => {
             let div;
             if (getChoices('left')[i]) div = 'ldiv';
@@ -494,12 +492,11 @@ function calculate() {
                 pickerDivs[div] += '<br>';
             }
         });
-        */
 
-        // if (pickerT.getLeftPlugin() == name) pickerT.fillLeftDiv(pickerDivs.ldiv, true);
-        //pickerT.showLeftDiv();
+        if (pickerT.getLeftPlugin() == name) pickerT.fillLeftDiv(pickerDivs.ldiv, true);
+        //pickerT.showLeftDiv();  // dont think needed
 
-        // if (pickerT.getRightPlugin() == name) pickerT.fillRightDiv(pickerDivs.rdiv);
+        if (pickerT.getRightPlugin() == name) pickerT.fillRightDiv(pickerDivs.rdiv);
         //pickerT.showRightDiv();
         //setURL();
     }
