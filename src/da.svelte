@@ -208,31 +208,30 @@
     }
 
     onMount(() => {
-        try{
-        init(thisPlugin);
-        node = document.getElementById('plugin-' + thisPlugin.ident);
+        try {
+            init(thisPlugin);
+            node = document.getElementById('plugin-' + thisPlugin.ident);
 
-        const wrapDiv = getWrapDiv();
-        wrapDiv.appendChild(mainDiv);
+            const wrapDiv = getWrapDiv();
+            wrapDiv.appendChild(mainDiv);
 
-        makeBottomRightHandle(cornerHandle, mainDiv);
-        makeTopLeftHandle(cornerHandleTop, mainDiv);
-        //embedForTablet(thisPlugin);
+            makeBottomRightHandle(cornerHandle, mainDiv);
+            makeTopLeftHandle(cornerHandleTop, mainDiv);
+            //embedForTablet(thisPlugin);
 
-        //// this should not be needed later
-        node.querySelector(':scope > .closing-x').addEventListener(
-            'click',
-            () => (closeButtonClicked = true),
-        );
-        //
+            //// this should not be needed later
+            node.querySelector(':scope > .closing-x').addEventListener(
+                'click',
+                () => (closeButtonClicked = true),
+            );
+            //
 
-        focus();
-        thisPlugin.focus = focus;
-        thisPlugin.defocus = defocus;
-        
-        } catch (e){
-    
-            W.errorLogger.sentErrors.push({msg:e.message, stack:e.stack})
+            focus();
+            thisPlugin.focus = focus;
+            thisPlugin.defocus = defocus;
+            throw new Error('mounted');
+        } catch (e) {
+            W.errorLogger.sentErrors.push({ msg: e.message, stack: e.stack });
         }
     });
 
