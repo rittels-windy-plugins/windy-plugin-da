@@ -404,6 +404,8 @@ function calculate() {
         pickerT.fillRightDiv(d.wind[ix]);
 
         let wind = d.wind[ix];
+
+        
         let gust = d.gust[ix];
         let windDir = d.windDir[ix];
         let rain = d.rain[ix];
