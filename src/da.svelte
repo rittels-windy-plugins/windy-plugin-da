@@ -124,12 +124,39 @@
             </div>
             <div class="section">
                 <div class="checkbox" data-ref="togglePickerElevation">
-                    Show elevetion in picker.
+                    Show elevation in picker.
                 </div>
                 <div class="checkbox" data-ref="togglePickerCoordinates">
                     Show coordinates below picker.
                 </div>
             </div>
+
+            <div class="toggle-section checkbox off" on:click={toggleSection}>Other settings:</div>
+            <div class="section">
+                <div class="other-settings">
+                    <div>Zoom:&nbsp;&nbsp;</div>
+                    <div class="button button--secondary" on:click={() => zoom()}>Default</div>
+                    <div
+                        class="button button--secondary"
+                        on:click={() => zoom('+')}
+                        style="padding-top:0.2em;"
+                    >
+                        +
+                    </div>
+                    <div
+                        class="button button--secondary"
+                        on:click={() => zoom('-')}
+                        style="padding-top:0.2em;"
+                    >
+                        -
+                    </div>
+                </div>
+                <div style="font-size:0.8em; margin-top:0.25em;">
+                    Note that this zoom setting will persist after the plugin is closed. Please
+                    reset to Default, or restart the app.
+                </div>
+            </div>
+
             <div class="toggle-section checkbox off" on:click={toggleSection}>About:</div>
             <div class="section">
                 <a href="https://rittels-windy-plugins.github.io?multipicker"
@@ -261,8 +288,16 @@
             .join('');
         store.set('plugin-da-sections', parseInt(str, 2));
     }
+
+    function zoom(v) {
+        console.log('zoom', document.body.style.zoom);
+        let z = +document.body.style.zoom || 1;
+        if (!v) document.body.style.zoom = 'initial';
+        else if (v == '+') document.body.style.zoom = z + 0.1;
+        else if (v == '-') document.body.style.zoom = z - 0.1;
+    }
 </script>
 
 <style lang="less">
-    @import 'da.less?1772695494314';
+    @import 'da.less?1775118363547';
 </style>

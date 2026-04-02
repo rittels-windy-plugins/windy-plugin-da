@@ -4,7 +4,7 @@ import store from '@windy/store';
 import bcast from '@windy/broadcast';
 import { emitter as picker } from '@windy/picker';
 import http from '@windy/http';
-//import rs from '@windy/rootScope';
+import rootScope from '@windy/rootScope';
 import windyFetch from '@windy/fetch';
 //import interpolator from '@windy/interpolator';
 import loc from '@windy/location';
@@ -33,10 +33,10 @@ let pickerT;
 
 let loggerTO;
 function logMessage(msg) {
+    const device=rootScope.device;
+    if (!store.get('consent')) return; // store.get('consent') sometimes returns null and not an object
     if (!store.get('consent').analytics) return;
-    fetch(`https://www.flymap.org.za/windy-logger/logger.htm?name=${name}&message=${msg}`, {
-        cache: 'no-store',
-    }).then(console.log);
+    fetch(`https://www.flymap.org.za/windy-logger/logger.htm?name=${name}&message=${msg}&device=${device}`, { cache: 'no-store' }).then(console.log);
 }
 
 function init(plgn) {
