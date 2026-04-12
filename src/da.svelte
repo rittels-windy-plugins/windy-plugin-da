@@ -175,6 +175,8 @@
     import plugins from '@windy/plugins';
     import { map } from '@windy/map';
     import store from '@windy/store';
+    import rootScope from '@windy/rootScope';
+    import utils from '@windy/utils';
 
     import { init, closeCompletely, vals } from './da_main.js';
     import {
@@ -289,15 +291,41 @@
         store.set('plugin-da-sections', parseInt(str, 2));
     }
 
+    function addZoomCSS() {
+        log("ADD CSS");
+        const zoomStyle = document.createElement('style');
+        zoomStyle.id = 'zoom-style-for-windy-plugin-da';
+        zoomStyle.textContent = `  
+            #plugin-mobile-ui{width:auto !important;}
+            .plugin-bottom{width:auto !important;}
+            .picker-content-wrapper .picker-content{width:auto !important;}
+            .location-buttons{width:auto !important;}
+        `;
+
+        if (!document.querySelector('#zoom-style-for-windy-plugin-da')) {
+            log(zoomStyle);
+            document.head.appendChild( zoomStyle);
+        }
+    }
+    function removeZoomCSS() {
+        if (document.querySelector('#zoom-style-for-windy-plugin-da')) {
+            document.querySelector('#zoom-style-for-windy-plugin-da').remove();
+        }
+    }
+
     function zoom(v) {
         console.log('zoom', document.body.style.zoom);
         let z = +document.body.style.zoom || 1;
         if (!v) document.body.style.zoom = 'initial';
         else if (v == '+') document.body.style.zoom = z + 0.1;
         else if (v == '-') document.body.style.zoom = z - 0.1;
+        if (rootScope.isMobileOrTablet) {
+            if (v) addZoomCSS();
+            else removeZoomCSS();
+        }
     }
 </script>
 
 <style lang="less">
-    @import 'da.less?1775118363547';
+    @import 'da.less?1775987688898';
 </style>
