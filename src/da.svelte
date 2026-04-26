@@ -130,7 +130,8 @@
 
             <div class="toggle-section checkbox off" on:click={toggleSection}>Other settings:</div>
             <div class="section">
-                {#if rootScope.target == 'index'}  <!-- this does not work  in the mobile app,  can work in tablet -->
+                {#if rootScope.target == 'index'}
+                    <!-- this does not work  in the mobile app,  can work in tablet -->
                     <div
                         class="checkbox"
                         class:checkbox--off={!syncTabs}
@@ -156,14 +157,7 @@
                 <div
                     class="checkbox"
                     class:checkbox--off={!hideLabels}
-                    on:click={() => {
-                        hideLabels = !hideLabels;
-                        if (hideLabels) {
-                            if (map.hasLayer(cityLabels)) cityLabels.remove();
-                        } else {
-                            cityLabels.addTo(map); // doesnt matter if added more than once
-                        }
-                    }}
+                    on:click={() => (hideLabels = !hideLabels)}
                 >
                     Hide city labels
                 </div>
@@ -191,13 +185,9 @@
     import rootScope from '@windy/rootScope';
     import utils from '@windy/utils';
 
-    import { init, closeCompletely, vals } from './da_main.js';
-    import {
-        toggleSyncPickers,
-        toggleSyncTabs,
-        toggleHideMenu,
-        initSyncTabs,
-    } from './sync_tabs.js';
+    import { init, closeCompletely, vals, settings } from './da_main.js';
+    import { toggleSyncPickers, toggleSyncTabs, initSyncTabs } from './sync_tabs.js';
+    import { toggleHideMenu, toggleHideLabels, initOther } from './other.js';
     import {
         coords,
         coordSign,
@@ -234,7 +224,9 @@
     let closeButtonClicked;
     let marker;
 
-    let syncTabs, syncPickers, hideMenu, hideLabels;
+    // the values are stored in the da_main,  so that if the plugin is reopened, the settings remain.
+    // it should be false by default.  I do not want it stored in localStorage
+    let { syncTabs, syncPickers, hideMenu, hideLabels } = settings;
 
     function focus() {
         for (let p in plugins) {
@@ -279,6 +271,7 @@
             thisPlugin.defocus = defocus;
 
             initSyncTabs();
+            initOther();
 
             throw new Error('mounted');
         } catch (e) {
@@ -316,8 +309,9 @@
     $: toggleSyncTabs(syncTabs);
     $: toggleSyncPickers(syncPickers);
     $: toggleHideMenu(hideMenu);
+    $: toggleHideLabels(hideLabels);
 </script>
 
 <style lang="less">
-    @import 'da.less?1777195987720';
+    @import 'da.less?1777202422163';
 </style>

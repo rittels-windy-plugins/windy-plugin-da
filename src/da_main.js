@@ -17,7 +17,8 @@ import config from './pluginConfig';
 import { insertGlobalCss, removeGlobalCss } from './globalCss.js';
 import { getPickerMarker } from 'custom-windy-picker';
 import { coordsToFields } from './coordinates.js';
-import { postData } from './sync_tabs.js';
+import { postData, cleanupSync } from './sync_tabs.js';
+import { cleanupOther } from './other.js';
 
 const { name } = config;
 const { $, getRefs } = utils;
@@ -32,7 +33,16 @@ let thisPlugin, refs, node;
 let hasHooks;
 let pickerT;
 
+let settings = {
+    syncTabs: false,
+    syncPickers: false,
+    hideLabels: false,
+    hideMenus: false
+}
+
 let loggerTO;
+
+
 function logMessage(msg) {
     const device = rootScope.device;
     if (!store.get('consent')) return; // store.get('consent') sometimes returns null and not an object
@@ -128,6 +138,9 @@ const closeCompletely = function () {
 
     clearTimeout(loggerTO);
 
+    cleanupOther();
+    cleanupSync();
+
     removeGlobalCss();
 
     pickerT.offDrag(fetchData);
@@ -145,7 +158,6 @@ const closeCompletely = function () {
     singleclick.singleclick.off(name, pickerT.openMarker);
     bcast.off('pluginOpened', onPluginOpened);
     bcast.off('pluginClosed', onPluginClosed);
-
     bcast.fire('rqstClose', name);
 
     // other plugins will try to defocus this plugin.
@@ -383,7 +395,7 @@ function makePickerTextAndFill(vals) {
 }
 
 /** if showPickerCoordsSelected */
-function fillCoordsFields(c){
+function fillCoordsFields(c) {
     let showPickerCoords = !refs.coordsPicker.classList.contains('checkbox--off');
     if (showPickerCoords) coordsToFields(c);
 }
@@ -489,16 +501,12 @@ function calculate() {
             }
     });
 
-    let data={vals, coords:{lat,lon}};
+    let data = { vals, coords: { lat, lon } };
     postData(JSON.stringify(data));
     let pickerDivs = makePickerTextAndFill(vals);
-    
-
-    
 }
 
 function fetchData(c) {
-
     if (c.otherTab) {
         return;
     }
@@ -568,11 +576,8 @@ function fetchData(c) {
                 console.log(er);
                 datafnd = true;
             });
-
-       
     }
     fillCoordsFields(c);
-    
 }
 
-export { vals, makePickerTextAndFill, fillCoordsFields };
+export { vals, settings, makePickerTextAndFill, fillCoordsFields };

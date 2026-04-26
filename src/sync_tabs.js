@@ -3,7 +3,7 @@ import store from '@windy/store';
 import { $ } from '@windy/utils';
 import { emitter as picker } from '@windy/picker';
 import { getPickerMarker } from 'custom-windy-picker';
-import { makePickerTextAndFill, fillCoordsFields } from './da_main.js';
+import { makePickerTextAndFill, fillCoordsFields, settings } from './da_main.js';
 
 let pickerT;
 
@@ -11,12 +11,11 @@ let tabId = null, // will get a value when mounted
     channel,
     channelPicker,
     channelData,
-    syncPickers,
     mapByOtherTab = false,
     pickerByOtherTab = false;
 
 function initSyncTabs() {
-    tabId = Math.round(Math.random() * 1000000000);
+    if (tabId == null) tabId = Math.round(Math.random() * 1000000000); // do not reassign tab number,  only if cloased completely.
     pickerT = getPickerMarker();
 }
 
@@ -37,7 +36,7 @@ function postPicker(coords) {
 }
 
 function postData(data) {
-    if (pickerByOtherTab || !syncPickers) return;
+    if (pickerByOtherTab || !settings.syncPickers) return;
     channelData.postMessage({ tabId, data });
 }
 
@@ -45,6 +44,7 @@ function receiveData(data, fun) {}
 
 function toggleSyncTabs(syncTabs) {
     if (tabId == null) return;
+    settings.syncTabs = syncTabs;
     if (syncTabs) {
         channel = new BroadcastChannel('syncMapParams');
         channel.onmessage = e => {
@@ -65,9 +65,9 @@ function toggleSyncTabs(syncTabs) {
     }
 }
 
-function toggleSyncPickers(sync) {
-    syncPickers = sync;
+function toggleSyncPickers(syncPickers) {
     if (tabId == null) return;
+    settings.syncPickers=syncPickers;
     if (syncPickers) {
         channelPicker = new BroadcastChannel('syncPickers');
         channelPicker.onmessage = e => {
@@ -82,9 +82,9 @@ function toggleSyncPickers(sync) {
         channelData = new BroadcastChannel('pickerData');
         channelData.onmessage = e => {
             if (e.data.tabId !== tabId) {
-                let data=JSON.parse(e.data.data);
+                let data = JSON.parse(e.data.data);
                 makePickerTextAndFill(data.vals);
-                fillCoordsFields(data.coords)
+                fillCoordsFields(data.coords);
             }
         };
         pickerT.onDrag(postPicker);
@@ -114,11 +114,10 @@ function toggleHideMenu(hideMenu) {
 }
 
 function cleanupSync() {
-    pickerT.offDrag(postPicker);
-    picker.off('pickerOpened', postPicker);
-    picker.off('pickerMoved', postPicker);
-    store.off('timestamp', postParams);
-    map.off('move', postParams);
+    toggleHideMenu(false);
+    toggleSyncPickers(false);
+    toggleHideMenu(false);
+    tabId = null;
 }
 
-export { toggleHideMenu, toggleSyncPickers, toggleSyncTabs, initSyncTabs, cleanupSync, postData };
+export { initSyncTabs, cleanupSync, toggleHideMenu, toggleSyncPickers, toggleSyncTabs, postData };
