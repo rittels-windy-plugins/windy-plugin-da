@@ -5,6 +5,8 @@ import { emitter as picker } from '@windy/picker';
 import { getPickerMarker } from 'custom-windy-picker';
 import { makePickerTextAndFill, fillCoordsFields, settings } from './da_main.js';
 
+const { log } = console;
+
 let pickerT;
 
 let tabId = null, // will get a value when mounted
@@ -31,6 +33,8 @@ function postParams() {
 }
 
 function postPicker(coords) {
+    // for now,  only post if custom-picker is moved.   This is important for tablet when mobile picker can trigger pickerMoved
+    if (coords.source !== 'custom-picker') return;
     if (pickerByOtherTab) return;
     channelPicker.postMessage({ tabId, coords });
 }
@@ -67,7 +71,7 @@ function toggleSyncTabs(syncTabs) {
 
 function toggleSyncPickers(syncPickers) {
     if (tabId == null) return;
-    settings.syncPickers=syncPickers;
+    settings.syncPickers = syncPickers;
     if (syncPickers) {
         channelPicker = new BroadcastChannel('syncPickers');
         channelPicker.onmessage = e => {
