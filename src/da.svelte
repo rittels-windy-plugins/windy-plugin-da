@@ -34,7 +34,7 @@
             </div>
             <div class="section">
                 <table style="margin-bottom:5px">
-                    <tr><td>Left</td><td>Right</td></tr>
+                    <tr><td>Left</td><td>Right</td><td></td></tr>
                 </table>
                 <table data-ref="choose">
                     {#each vals as val}
@@ -86,15 +86,14 @@
                 </div>
                 <div
                     data-ref="placePicker"
-                    class="button button--secondary"
+                    class="button button--secondary loc-button"
                     on:click={() => placePicker(marker)}
                 >
                     Place picker
                 </div>
-                <br />
                 <div
                     data-ref="paste"
-                    class="button button--secondary"
+                    class="button button--secondary loc-button"
                     on:click={() => {
                         navigator.clipboard.readText().then(s => {
                             let latlon = stringToLatLon(s);
@@ -106,8 +105,6 @@
                 >
                     Paste coordinates from clipboard
                 </div>
-                <br />
-
                 <div
                     data-ref="coordsPicker"
                     class="checkbox"
@@ -133,27 +130,42 @@
 
             <div class="toggle-section checkbox off" on:click={toggleSection}>Other settings:</div>
             <div class="section">
-                <div class="other-settings">
-                    <div>Zoom:&nbsp;&nbsp;</div>
-                    <div class="button button--secondary" on:click={() => zoom()}>Default</div>
+                {#if rootScope.target == 'index'}  <!-- this does not work  in the mobile app,  can work in tablet -->
                     <div
-                        class="button button--secondary"
-                        on:click={() => zoom('+')}
-                        style="padding-top:0.2em;"
+                        class="checkbox"
+                        class:checkbox--off={!syncTabs}
+                        on:click={() => (syncTabs = !syncTabs)}
                     >
-                        +
+                        Sync browser tabs
                     </div>
                     <div
-                        class="button button--secondary"
-                        on:click={() => zoom('-')}
-                        style="padding-top:0.2em;"
+                        class="checkbox"
+                        class:checkbox--off={!syncPickers}
+                        on:click={() => (syncPickers = !syncPickers)}
                     >
-                        -
+                        Sync pickers
                     </div>
-                </div>
-                <div style="font-size:0.8em; margin-top:0.25em;">
-                    Note that this zoom setting will persist after the plugin is closed. Please
-                    reset to Default, or restart the app.
+                    <div
+                        class="checkbox"
+                        class:checkbox--off={!hideMenu}
+                        on:click={() => (hideMenu = !hideMenu)}
+                    >
+                        Hide Menu and Search
+                    </div>
+                {/if}
+                <div
+                    class="checkbox"
+                    class:checkbox--off={!hideLabels}
+                    on:click={() => {
+                        hideLabels = !hideLabels;
+                        if (hideLabels) {
+                            if (map.hasLayer(cityLabels)) cityLabels.remove();
+                        } else {
+                            cityLabels.addTo(map); // doesnt matter if added more than once
+                        }
+                    }}
+                >
+                    Hide city labels
                 </div>
             </div>
 
@@ -174,11 +186,18 @@
     import { onDestroy, onMount } from 'svelte';
     import plugins from '@windy/plugins';
     import { map } from '@windy/map';
+    import { cityLabels } from '@windy/cityLabels';
     import store from '@windy/store';
     import rootScope from '@windy/rootScope';
     import utils from '@windy/utils';
 
     import { init, closeCompletely, vals } from './da_main.js';
+    import {
+        toggleSyncPickers,
+        toggleSyncTabs,
+        toggleHideMenu,
+        initSyncTabs,
+    } from './sync_tabs.js';
     import {
         coords,
         coordSign,
@@ -208,12 +227,14 @@
 
     let svelteCoords = coords,
         svelteCoordSign = coordSign;
-    console.log(svelteCoordSign);
+
     let node;
     let mainDiv;
     let cornerHandle, cornerHandleTop;
     let closeButtonClicked;
     let marker;
+
+    let syncTabs, syncPickers, hideMenu, hideLabels;
 
     function focus() {
         for (let p in plugins) {
@@ -222,8 +243,6 @@
             }
         }
         thisPlugin.isFocused = true;
-
-        // now do whatever,  for this plugin,  only addRightPlugin and addLeftPlugin ;
         marker = getPickerMarker();
         marker?.addRightPlugin(name);
         marker?.addLeftPlugin(name);
@@ -258,6 +277,9 @@
             focus();
             thisPlugin.focus = focus;
             thisPlugin.defocus = defocus;
+
+            initSyncTabs();
+
             throw new Error('mounted');
         } catch (e) {
             W.errorLogger.sentErrors.push({ msg: e.message, stack: e.stack });
@@ -291,41 +313,11 @@
         store.set('plugin-da-sections', parseInt(str, 2));
     }
 
-    function addZoomCSS() {
-        log("ADD CSS");
-        const zoomStyle = document.createElement('style');
-        zoomStyle.id = 'zoom-style-for-windy-plugin-da';
-        zoomStyle.textContent = `  
-            #plugin-mobile-ui{width:auto !important;}
-            .plugin-bottom{width:auto !important;}
-            .picker-content-wrapper .picker-content{width:auto !important;}
-            .location-buttons{width:auto !important;}
-        `;
-
-        if (!document.querySelector('#zoom-style-for-windy-plugin-da')) {
-            log(zoomStyle);
-            document.head.appendChild( zoomStyle);
-        }
-    }
-    function removeZoomCSS() {
-        if (document.querySelector('#zoom-style-for-windy-plugin-da')) {
-            document.querySelector('#zoom-style-for-windy-plugin-da').remove();
-        }
-    }
-
-    function zoom(v) {
-        console.log('zoom', document.body.style.zoom);
-        let z = +document.body.style.zoom || 1;
-        if (!v) document.body.style.zoom = 'initial';
-        else if (v == '+') document.body.style.zoom = z + 0.1;
-        else if (v == '-') document.body.style.zoom = z - 0.1;
-        if (rootScope.isMobileOrTablet) {
-            if (v) addZoomCSS();
-            else removeZoomCSS();
-        }
-    }
+    $: toggleSyncTabs(syncTabs);
+    $: toggleSyncPickers(syncPickers);
+    $: toggleHideMenu(hideMenu);
 </script>
 
 <style lang="less">
-    @import 'da.less?1775987688898';
+    @import 'da.less?1777195987720';
 </style>

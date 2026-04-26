@@ -38,6 +38,8 @@ The plugin also contains a **coordinate converter** between:  DDD°MM'SS.S",  DD
 
 You can set the following **Windy Picker settings** from this plugin:  Elevation in the picker and Coordinates below the picker.  This is useful in mobile, since the plugin use the original style desktop picker.   
 
+Different tabs or browser windows running this plugin, can be **synced**.   Only the map or only the picker,  or both can be synced.  It only works if the plugin is open in the same browser application (the plugin running and in Chrome cannot be synced with Edge.)
+
 ### Path to this plugin:
 
 Once the plugin has been installed,  open it with the following URL:

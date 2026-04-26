@@ -222,7 +222,7 @@ function parse(s) {
 
 function stringToLatLon(s) {
     let parsed = parse(s);
-    console.log(parsed);
+    
     if (!parsed || parsed.some(p => p == null)) return 'invalid';
 
     const ar2val = ar => {

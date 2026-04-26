@@ -17,6 +17,7 @@ import config from './pluginConfig';
 import { insertGlobalCss, removeGlobalCss } from './globalCss.js';
 import { getPickerMarker } from 'custom-windy-picker';
 import { coordsToFields } from './coordinates.js';
+import { postData } from './sync_tabs.js';
 
 const { name } = config;
 const { $, getRefs } = utils;
@@ -33,10 +34,13 @@ let pickerT;
 
 let loggerTO;
 function logMessage(msg) {
-    const device=rootScope.device;
+    const device = rootScope.device;
     if (!store.get('consent')) return; // store.get('consent') sometimes returns null and not an object
     if (!store.get('consent').analytics) return;
-    fetch(`https://www.flymap.org.za/windy-logger/logger.htm?name=${name}&message=${msg}&device=${device}`, { cache: 'no-store' }).then(console.log);
+    fetch(
+        `https://www.flymap.org.za/windy-logger/logger.htm?name=${name}&message=${msg}&device=${device}`,
+        { cache: 'no-store' },
+    ).then(console.log);
 }
 
 function init(plgn) {
@@ -84,7 +88,7 @@ function init(plgn) {
     let myloc = geoloc.getMyLatestPos();
     if (myloc) coordsToFields(myloc);
 
-    let headings = (+store.get('plugin-da-sections')).toString(2).padStart(4, '0');
+    let headings = (+store.get('plugin-da-sections')).toString(2).padStart(5, '0');
     node.querySelectorAll('.toggle-section').forEach((e, i) =>
         e.classList[headings[i] == '1' ? 'add' : 'remove']('off'),
     );
@@ -227,8 +231,8 @@ store.insert('plugin-da-selected-vals-right', {
     save: true,
 });
 store.insert('plugin-da-sections', {
-    def: parseInt('1100', 2),
-    allowed: v => v >= 0 && v < pow(2, 4),
+    def: parseInt('11000', 2),
+    allowed: v => v >= 0 && v < pow(2, 5),
     save: true,
 });
 
@@ -351,100 +355,119 @@ function onChoose(e) {
     calculate();
 }
 
+function makePickerTextAndFill(vals) {
+    let pickerDivs = { ldiv: '', rdiv: '' };
+
+    vals.forEach(({ metric, txt, v }, i) => {
+        let div;
+        if (getChoices('left')[i]) div = 'ldiv';
+        else if (getChoices('right')[i]) div = 'rdiv';
+        else return;
+
+        if (div) {
+            if (typeof v == 'string') pickerDivs[div] += v;
+            else {
+                let m = store.get('metric_' + metric);
+                if (txt == 'Elev' && m == 'ft' && v < 0) m = 'm'; // if undersea,  use meter
+                let conversion =
+                    m == 'ft' ? e => round(e / ft2m) : W.metrics[metric].conv[m].conversion;
+                pickerDivs[div] += `${txt}:  ${round(conversion(v))}${m}`;
+                if (txt.includes('Wind')) pickerDivs[div] += `, ${windDir}°`;
+            }
+            pickerDivs[div] += '<br>';
+        }
+    });
+    if (pickerT.getLeftPlugin() == name) pickerT.fillLeftDiv(pickerDivs.ldiv, true);
+    if (pickerT.getRightPlugin() == name) pickerT.fillRightDiv(pickerDivs.rdiv);
+    return pickerDivs;
+}
+
+/** if showPickerCoordsSelected */
+function fillCoordsFields(c){
+    let showPickerCoords = !refs.coordsPicker.classList.contains('checkbox--off');
+    if (showPickerCoords) coordsToFields(c);
+}
+
 function calculate() {
-    //console.log(Object.keys(wxdata.data.data).join('<br>'));
-    /*
-    pickerT.fillRightDiv(
-        'WX ' + JSON.stringify(wxdata) + '<br>' + 'ts' + ts + '<br>' + wxdata.data.data.temp[0],
-    );
-    */
-    if (!wxdata) {
-        //if (pickerT.getRightPlugin() == name)
-        //    pickerT.fillRightDiv(
-        //        "No Wx Data"
-        //    );
-    }
-    if (wxdata) {
-        elevPntFcst = wxdata.data.header.elevation;
+    if (!wxdata) return;
 
-        let {
-            pos: { lat, lon },
-        } = wxdata;
+    elevPntFcst = wxdata.data.header.elevation;
+    let {
+        pos: { lat, lon },
+    } = wxdata;
 
-        let lata = abs(lat),
-            lati = trunc(lata),
-            latm = abs(lata % 1) * 60,
-            latmi = trunc(latm),
-            lats = abs(latm % 1) * 60,
-            NS = sign(lat) == 1 ? 'N' : 'S';
-        let lona = abs(lon),
-            loni = trunc(lona),
-            lonm = abs(lona % 1) * 60,
-            lonmi = trunc(lonm),
-            lons = abs(lonm % 1) * 60,
-            EW = sign(lon) == 1 ? 'E' : 'W';
+    let lata = abs(lat),
+        lati = trunc(lata),
+        latm = abs(lata % 1) * 60,
+        latmi = trunc(latm),
+        lats = abs(latm % 1) * 60,
+        NS = sign(lat) == 1 ? 'N' : 'S';
+    let lona = abs(lon),
+        loni = trunc(lona),
+        lonm = abs(lona % 1) * 60,
+        lonmi = trunc(lonm),
+        lons = abs(lonm % 1) * 60,
+        EW = sign(lon) == 1 ? 'E' : 'W';
 
-        let elev = elp.elev / ft2m;
-        if (elev < 0) elev = 0;
+    let elev = elp.elev / ft2m;
+    if (elev < 0) elev = 0;
 
-        let d = wxdata.data.data;
-        let ix = 0;
-        for (let i = 0; i < d.ts.length; i++) {
-            if (d.ts[i] > ts) {
-                if (i == 0) break;
-                else {
-                    ix = (d.ts[i] - ts) / (d.ts[i] - d.ts[i - 1]) < 0.5 ? i : i - 1;
-                    break;
-                }
+    let d = wxdata.data.data;
+    let ix = 0;
+    for (let i = 0; i < d.ts.length; i++) {
+        if (d.ts[i] > ts) {
+            if (i == 0) break;
+            else {
+                ix = (d.ts[i] - ts) / (d.ts[i] - d.ts[i - 1]) < 0.5 ? i : i - 1;
+                break;
             }
         }
+    }
 
-        //pickerT.fillRightDiv(Object.keys(wxdata.data.data).join('<br>'));
+    let wind = d.wind ? d.wind[ix] : 'No wind data';
+    let gust = d.gust ? d.gust[ix] : 'No gust data';
+    let windDir = d.windDir ? d.windDir[ix] : 'No windDir data';
+    let rain = d.rain ? d.rain[ix] : 'No rain data';
+    let cbase = !d.cbase ? 'No cbase data' : d.cbase[ix] == null ? 'No cloud' : d.cbase[ix];
+    let rh = d.rh ? d.rh[ix] : 'No rh data';
+    let pressure = d.pressure ? d.pressure[ix] : 'No pressure data';
+    let dewPoint = d.dewPoint ? d.dewPoint[ix] : 'No dewPoint data';
+    let temp = d.temp ? d.temp[ix] : 'No temp data';
+    //weathercode = d.weathercode[ix];
 
-        let wind = d.wind ? d.wind[ix] : 'No wind data';
-        let gust = d.gust ? d.gust[ix] : 'No gust data';
-        let windDir = d.windDir ? d.windDir[ix] : 'No windDir data';
-        let rain = d.rain ? d.rain[ix] : 'No rain data';
-        let cbase = !d.cbase ? 'No cbase data' : d.cbase[ix] == null ? 'No cloud' : d.cbase[ix];
-        let rh = d.rh ? d.rh[ix] : 'No rh data';
-        let pressure = d.pressure ? d.pressure[ix] : 'No pressure data';
-        let dewPoint = d.dewPoint ? d.dewPoint[ix] : 'No dewPoint data';
-        let temp = d.temp ? d.temp[ix] : 'No temp data';
-        //weathercode = d.weathercode[ix];
+    /** pressureC in hPa */
+    let pressureC = round(pressure) / 100;
+    let tempC = round((temp + K) * 10) / 10;
+    let dewPC = round((dewPoint + K) * 10) / 10;
 
-        /** pressureC in hPa */
-        let pressureC = round(pressure) / 100;
-        let tempC = round((temp + K) * 10) / 10;
-        let dewPC = round((dewPoint + K) * 10) / 10;
+    let da_corr_dp = dewPC * 20;
+    let pa = elev + 27 * (1013 - pressureC);
+    let isa = 15 - (1.98 * pa) / 1000;
+    let da = pa + 118.8 * (tempC - isa);
+    let da_dp = da + da_corr_dp;
 
-        let da_corr_dp = dewPC * 20;
-        let pa = elev + 27 * (1013 - pressureC);
-        let isa = 15 - (1.98 * pa) / 1000;
-        let da = pa + 118.8 * (tempC - isa);
-        let da_dp = da + da_corr_dp;
+    // Stull formula
+    let wetBulb =
+        tempC * atan(0.151977 * sqrt(rh + 8.313659)) +
+        atan(tempC + rh) -
+        atan(rh - 1.676331) +
+        0.00391838 * pow(rh, 1.5) * atan(0.023101 * rh) -
+        4.686035 -
+        K; // temps in K,   converted later
 
-        // Stull formula
-        let wetBulb =
-            tempC * atan(0.151977 * sqrt(rh + 8.313659)) +
-            atan(tempC + rh) -
-            atan(rh - 1.676331) +
-            0.00391838 * pow(rh, 1.5) * atan(0.023101 * rh) -
-            4.686035 -
-            K; // temps in K,   converted later
+    let deltaT = temp - wetBulb - K;
 
-        let deltaT = temp - wetBulb - K;
+    // Steadman formula:
+    // vapour pressure e (hPa)
+    // e = (RH/100) * 6.105 * exp(17.27*T / (237.7 + T))
+    const e_hPa = (rh / 100) * 6.105 * exp((17.27 * tempC) / (237.7 + tempC));
+    // Steadman apparent temperature (°C)
+    // AT = T + 0.33e - 0.70v - 4.00
+    const apparentT = tempC + 0.33 * e_hPa - 0.7 * wind - 4.0 - K; // temps in K,   converted later
 
-        // Steadman formula:
-        // vapour pressure e (hPa)
-        // e = (RH/100) * 6.105 * exp(17.27*T / (237.7 + T))
-        const e_hPa = (rh / 100) * 6.105 * exp((17.27 * tempC) / (237.7 + tempC));
-        // Steadman apparent temperature (°C)
-        // AT = T + 0.33e - 0.70v - 4.00
-        const apparentT = tempC + 0.33 * e_hPa - 0.7 * wind - 4.0 - K; // temps in K,   converted later
-
-        vals.forEach(e => {
-            // prettier-ignore
-            switch (e.txt) {
+    vals.forEach(e => {
+        // prettier-ignore
+        switch (e.txt) {
                 case 'Elev':               e.v = elp.elev;        break;
                 case 'PA':                 e.v = pa*ft2m;         break;
                 case 'DA':                 e.v = da*ft2m;         break;
@@ -464,47 +487,21 @@ function calculate() {
                 case `DDD°MM.MMM'`:        e.v = `${lati}°${latm.toFixed(3)}'${NS} ${loni}°${lonm.toFixed(3)}'${EW}`;  break;  
                 case `DDD.DDDDD°`:         e.v = `${lata.toFixed(5)}°${NS} ${lona.toFixed(5)}°${EW}`;  break;   
             }
-        });
+    });
 
-        let thermalspan =
-            thermal && elp.elev !== void 0
-                ? `<span style="width:60px;font-size:16px;display:inline-block;margin-bottom:5px;">&nbsp;${round(thermal - elev)} AGL</span><br>`
-                : '';
+    let data={vals, coords:{lat,lon}};
+    postData(JSON.stringify(data));
+    let pickerDivs = makePickerTextAndFill(vals);
+    
 
-        let pickerDivs = { ldiv: '', rdiv: '' };
-
-        vals.forEach(({ metric, txt, v }, i) => {
-            let div;
-            if (getChoices('left')[i]) div = 'ldiv';
-            else if (getChoices('right')[i]) div = 'rdiv';
-            else return;
-
-            if (div) {
-                if (typeof v == 'string') pickerDivs[div] += v;
-                else {
-                    let m = store.get('metric_' + metric);
-                    if (txt == 'Elev' && m == 'ft' && v < 0) m = 'm'; // if undersea,  use meter
-                    let conversion =
-                        m == 'ft' ? e => round(e / ft2m) : W.metrics[metric].conv[m].conversion;
-                    pickerDivs[div] += `${txt}:  ${round(conversion(v))}${m}`;
-                    if (txt.includes('Wind')) pickerDivs[div] += `, ${windDir}°`;
-                }
-                pickerDivs[div] += '<br>';
-            }
-        });
-
-        if (pickerT.getLeftPlugin() == name) pickerT.fillLeftDiv(pickerDivs.ldiv, true);
-        //pickerT.showLeftDiv();  // dont think needed
-
-        if (pickerT.getRightPlugin() == name) pickerT.fillRightDiv(pickerDivs.rdiv);
-        //pickerT.showRightDiv();
-        //setURL();
-    }
+    
 }
 
 function fetchData(c) {
-    //console.error('SOURCE', c, JSON.stringify(c, null, 1));
-    //pickerT.fillLeftDiv(JSON.stringify(c, null, 1), true);
+
+    if (c.otherTab) {
+        return;
+    }
     if (c.source == 'picker') return; // only react on custom-picker
 
     lastpos = c;
@@ -552,27 +549,16 @@ function fetchData(c) {
             });
     }
 
-    /*
-    if (store.get('overlay') == 'ccl') {
-        interpolator(ip => {
-            thermal = ip(c)[0] * 3.28084;
-            console.log('thermal', thermal);
-        });
-    } else thermal = null;
-*/
-
     if (datafnd) {
         datafnd = false;
         c.interpolate = true;
         c.step = 1;
         let product = store.get('product');
         if (product == 'topoMap') product = 'ecmwf';
-        //pickerT.fillRightDiv('fetching', true);
         windyFetch
             .getPointForecastData(product, c)
             .then(data => {
                 wxdata = data;
-                //pickerT.fillRightDiv(JSON.stringify(data, null, 1), true);
                 wxdata.pos = c;
                 lefta = 1;
                 setTimeout(() => (datafnd = true), 150);
@@ -583,19 +569,10 @@ function fetchData(c) {
                 datafnd = true;
             });
 
-        /*    
-        windyFetch.getMeteogramForecastData(store.get('product'), c)
-            .then(data => {
-                console.log(data);
-            })
-            .catch(er => {
-                console.log(er);
-            });
-        */
+       
     }
-
-    let showPickerCoords = !refs.coordsPicker.classList.contains('checkbox--off');
-    if (showPickerCoords) coordsToFields(c);
+    fillCoordsFields(c);
+    
 }
 
-export { vals };
+export { vals, makePickerTextAndFill, fillCoordsFields };

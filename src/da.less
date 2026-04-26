@@ -105,12 +105,15 @@
             }
             [data-ref='coordsPicker'] {
                 padding-top: 5px;
-                padding-left: 8px;
             }
+
             .coordsTable {
                 margin-bottom: 5px;
             }
-
+            .loc-button {
+                margin-left: 0px;
+                max-width: 300px;
+            }
             .toggle-section {
                 font-size: 1.2em;
                 margin: 0.5em 0;
@@ -134,13 +137,15 @@
                         }
 
                         & + * {
-                            display: block;
+                            display: flex;
                         }
                     }
                 }
             }
             .section {
                 margin: 0.2em 0 0.2em 2em;
+                display: flex;
+                flex-direction: column;
             }
             .other-settings {
                 display: flex;
