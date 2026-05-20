@@ -37,11 +37,10 @@ let settings = {
     syncTabs: false,
     syncPickers: false,
     hideLabels: false,
-    hideMenus: false
-}
+    hideMenus: false,
+};
 
 let loggerTO;
-
 
 function logMessage(msg) {
     const device = rootScope.device;
@@ -377,8 +376,13 @@ function makePickerTextAndFill(vals) {
         else return;
 
         if (div) {
-            if (typeof v == 'string') pickerDivs[div] += v;
+            if (typeof v == 'string') pickerDivs[div] += v;  // no longer used.  this was weather codes.
             else {
+                let windDir;
+                if (txt == 'Wind') {  // v is object, of windDir and wind
+                    windDir = v.windDir;
+                    v = v.wind;
+                }
                 let m = store.get('metric_' + metric);
                 if (txt == 'Elev' && m == 'ft' && v < 0) m = 'm'; // if undersea,  use meter
                 let conversion =
@@ -480,24 +484,24 @@ function calculate() {
     vals.forEach(e => {
         // prettier-ignore
         switch (e.txt) {
-                case 'Elev':               e.v = elp.elev;        break;
-                case 'PA':                 e.v = pa*ft2m;         break;
-                case 'DA':                 e.v = da*ft2m;         break;
-                case 'DA_dp':              e.v = da_dp*ft2m;      break;
-                case 'QNH':                e.v = pressure;        break;
-                case 'Temp':               e.v = temp;            break;
-                case 'Dew Point':          e.v = dewPoint;        break;
-                case 'Wet Bulb':           e.v = wetBulb;         break;
-                case '&Delta;T':           e.v = deltaT;          break;
-                case 'Apparent T':         e.v = apparentT;       break;
-                case 'Humidity':           e.v = rh;              break;
-                case 'Rain':               e.v = rain;            break;
-                case 'Cloudbase':          e.v = cbase;           break;
-                case 'Wind':               e.v = wind;            break;
-                case 'Gust':               e.v = gust;            break;
-                case `DDD°MM'SS.S"`:       e.v = `${lati}°${latmi}'${lats.toFixed(1)}"${NS} ${loni}°${lonmi}'${lons.toFixed(1)}"${EW}`;  break; 
-                case `DDD°MM.MMM'`:        e.v = `${lati}°${latm.toFixed(3)}'${NS} ${loni}°${lonm.toFixed(3)}'${EW}`;  break;  
-                case `DDD.DDDDD°`:         e.v = `${lata.toFixed(5)}°${NS} ${lona.toFixed(5)}°${EW}`;  break;   
+                case 'Elev':               e.v = elp.elev;              break;
+                case 'PA':                 e.v = pa*ft2m;               break;
+                case 'DA':                 e.v = da*ft2m;               break;
+                case 'DA_dp':              e.v = da_dp*ft2m;            break;
+                case 'QNH':                e.v = pressure;              break;
+                case 'Temp':               e.v = temp;                  break;
+                case 'Dew Point':          e.v = dewPoint;              break;
+                case 'Wet Bulb':           e.v = wetBulb;               break;
+                case '&Delta;T':           e.v = deltaT;                break;
+                case 'Apparent T':         e.v = apparentT;             break;
+                case 'Humidity':           e.v = rh;                    break;
+                case 'Rain':               e.v = rain;                  break;
+                case 'Cloudbase':          e.v = cbase;                 break;
+                case 'Wind':               e.v = {wind, windDir};       break;
+                case 'Gust':               e.v = gust;                  break;
+                case `DDD°MM'SS.S"`:       e.v = `${lati}°${latmi}'${lats.toFixed(1)}"${NS} ${loni}°${lonmi}'${lons.toFixed(1)}"${EW}`;     break; 
+                case `DDD°MM.MMM'`:        e.v = `${lati}°${latm.toFixed(3)}'${NS} ${loni}°${lonm.toFixed(3)}'${EW}`;                       break;  
+                case `DDD.DDDDD°`:         e.v = `${lata.toFixed(5)}°${NS} ${lona.toFixed(5)}°${EW}`;                                       break;   
             }
     });
 
