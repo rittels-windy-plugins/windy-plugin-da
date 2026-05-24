@@ -273,8 +273,9 @@
             initSyncTabs();
             initOther();
 
-            throw new Error('mounted');
+            //throw new Error('mounted');
         } catch (e) {
+            log(e);
             W.errorLogger.sentErrors.push({ msg: e.message, stack: e.stack });
         }
     });
@@ -313,5 +314,5 @@
 </script>
 
 <style lang="less">
-    @import 'da.less?1779263773993';
+    @import 'da.less?1779610665223';
 </style>
