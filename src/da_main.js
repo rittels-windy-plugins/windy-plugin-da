@@ -9,6 +9,7 @@ import windyFetch from '@windy/fetch';
 //import interpolator from '@windy/interpolator';
 import loc from '@windy/location';
 import geoloc from '@windy/geolocation';
+import products from '@windy/products';
 
 import * as singleclick from '@windy/singleclick';
 
@@ -34,13 +35,91 @@ let hasHooks;
 let pickerT;
 
 let settings = {
-    syncTabs: false,
+    syncmap: false,
+    synctimestamp: false,
+    syncoverlay: false,
+    synclevel: false,
+    syncmodel: false,
     syncPickers: false,
     hideLabels: false,
     hideMenus: false,
 };
 
+const allParameters = [
+    'temp',
+    'dewpoint',
+    'precip',
+    'convPrecip',
+    'wind',
+    'windGust',
+    'cape',
+    'ptype',
+    'lclouds',
+    'mclouds',
+    'hclouds',
+    'rh',
+    'pressure',
+    'cbase',
+    'visibility',
+    'weatherWarnings',
+];
+let parameters = allParameters;
+
+let levels = [
+    'surface',
+    '1000h',
+    '950h',
+    '925h',
+    '900h',
+    '850h',
+    '800h',
+    '700h',
+    '600h',
+    '500h',
+    '400h',
+    '300h',
+    '200h',
+    '150h',
+];
+
 let loggerTO;
+
+let bathyReqTime;
+
+let wxdata;
+let lastpos;
+let prod = 'ecmwf';
+
+const K = -273.15;
+
+let ts = Date.now();
+
+let vals = [
+    { metric: 'altitude', txt: 'Elev' },
+    { metric: 'altitude', txt: 'Depth' }, //will be made meters
+    { metric: 'altitude', txt: 'PA', menu: 'Pressure Alt' },
+    { metric: 'altitude', txt: 'DA', menu: 'Density Alt' },
+    { metric: 'altitude', txt: 'DA_dp', menu: 'DA corrected for DP' },
+    { metric: 'pressure', txt: 'QNH' },
+    { metric: 'temp', txt: 'Temp' },
+    { metric: 'temp', txt: 'Dew Point' },
+    { metric: 'temp', txt: 'Wet Bulb', menu: 'Wet Bulb (Stull formula)' },
+    { metric: 'temp', txt: '&Delta;T', menu: '&Delta;T = Temp - Wet Bulb' },
+    { metric: 'temp', txt: 'Apparent T', menu: 'Apparent T (Steadman)' },
+    { metric: 'rh', txt: 'Humidity' },
+    { metric: 'rain', txt: 'Rain' },
+    { metric: 'rain', txt: 'Convective rain' },
+    { metric: 'altitude', txt: 'Cloudbase' },
+    // { metric: '', txt: 'Wx code: ' },
+    { metric: 'wind', txt: 'Wind' },
+    { metric: 'wind', txt: 'Gust' },
+    { metric: '', txt: `DDD°MM'SS.S"` },
+    { metric: '', txt: `DDD°MM.MMM'` },
+    { metric: '', txt: `DDD.DDDDD°` },
+];
+
+//  only have to add a parameter to vals,  the number does not have to specified for store etc
+let nVals = vals.length;
 
 function logMessage(msg) {
     const device = rootScope.device;
@@ -117,7 +196,7 @@ function init(plgn) {
 
     insertGlobalCss();
 
-    pickerT.onDrag(fetchData);
+    pickerT.onDrag(fetchData, 200);
     picker.on('pickerOpened', fetchData);
     picker.on('pickerMoved', pickerMoved);
 
@@ -184,53 +263,6 @@ function onPluginClosed(p) {
 
 export { init, closeCompletely };
 
-//
-
-//let pressure, temp, dewP, rh, pa, da, da_corr_dp, da_dp;
-let wxdata;
-let prod = 'ecmwf';
-let lastpos;
-let lefta = 1,
-    righta = 1;
-let elp = {};
-let datafnd = true,
-    elevfnd = true,
-    airfnd = true;
-let thermal;
-let query;
-
-/** elevation from point forecast */
-let elevPntFcst;
-
-const K = -273.15;
-
-let ts = Date.now();
-
-let vals = [
-    { metric: 'altitude', txt: 'Elev' },
-    { metric: 'altitude', txt: 'PA', menu: 'Pressure Alt' },
-    { metric: 'altitude', txt: 'DA', menu: 'Density Alt' },
-    { metric: 'altitude', txt: 'DA_dp', menu: 'DA corrected for DP' },
-    { metric: 'pressure', txt: 'QNH' },
-    { metric: 'temp', txt: 'Temp' },
-    { metric: 'temp', txt: 'Dew Point' },
-    { metric: 'temp', txt: 'Wet Bulb', menu: 'Wet Bulb (Stull formula)' },
-    { metric: 'temp', txt: '&Delta;T', menu: '&Delta;T = Temp - Wet Bulb' },
-    { metric: 'temp', txt: 'Apparent T', menu: 'Apparent T (Steadman)' },
-    { metric: 'rh', txt: 'Humidity' },
-    { metric: 'rain', txt: 'Rain' },
-    { metric: 'altitude', txt: 'Cloudbase' },
-    // { metric: '', txt: 'Wx code: ' },
-    { metric: 'wind', txt: 'Wind' },
-    { metric: 'wind', txt: 'Gust' },
-    { metric: '', txt: `DDD°MM'SS.S"` },
-    { metric: '', txt: `DDD°MM.MMM'` },
-    { metric: '', txt: `DDD.DDDDD°` },
-];
-
-//  only have to add a parameter to vals,  the number does not have to specified for store etc
-let nVals = vals.length;
-
 store.insert('plugin-da-selected-vals-left', {
     def: parseInt('000011100011'.padEnd(nVals, '0'), 2),
     allowed: v => v >= 0 && v < pow(2, nVals),
@@ -253,6 +285,10 @@ function getChoices(side) {
     return choices;
 }
 
+function isChoiceSelected(txt) {
+    let ix = vals.findIndex(e => e.txt == txt);
+    return getChoices('left')[ix] == 1 || getChoices('right')[ix] == 1;
+}
 //read query data
 
 function useQuery(query) {
@@ -292,8 +328,8 @@ function setURL() {
 function pickerMoved(e) {
     if (e.source == 'picker') return; // only react on custom-picker
     //if (pickerT.getActivePlugin() != name) return;
-    elevfnd = datafnd = true;
-    setTimeout(fetchData, 500, e);
+    //elevfnd = datafnd = true;
+    setTimeout(fetchData, 50, e);
 }
 
 function onMetricChanged() {
@@ -313,6 +349,7 @@ function setTs(t) {
 
 function setProd(e) {
     prod = e;
+    parameters = allParameters;
     if (lastpos) fetchData(lastpos);
 }
 
@@ -376,18 +413,24 @@ function makePickerTextAndFill(vals) {
         else return;
 
         if (div) {
-            if (typeof v == 'string') pickerDivs[div] += v;  // no longer used.  this was weather codes.
-            else {
+            if (typeof v == 'string') {
+                //if depth not yet avail == ""
+                if (txt == 'Depth') v = v.padEnd(6, '\u00A0');
+                pickerDivs[div] += `${txt}:  ${v}`;
+            } else {
                 let windDir;
-                if (txt == 'Wind') {  // v is object, of windDir and wind
+                if (txt == 'Wind') {
+                    // v is object, of windDir and wind
                     windDir = v.windDir;
                     v = v.wind;
                 }
                 let m = store.get('metric_' + metric);
-                if (txt == 'Elev' && m == 'ft' && v < 0) m = 'm'; // if undersea,  use meter
+                if (txt == 'Depth') m = 'm'; // if undersea,  use meter
                 let conversion =
                     m == 'ft' ? e => round(e / ft2m) : W.metrics[metric].conv[m].conversion;
-                pickerDivs[div] += `${txt}:  ${round(conversion(v))}${m}`;
+                let valTxt = `${round(10 * conversion(v)) / 10}${m}`;
+                if (txt == 'Depth') valTxt = valTxt.padEnd(6, '\u00A0');
+                pickerDivs[div] += `${txt}: ${valTxt}`;
                 if (txt.includes('Wind')) pickerDivs[div] += `, ${windDir}°`;
             }
             pickerDivs[div] += '<br>';
@@ -407,10 +450,12 @@ function fillCoordsFields(c) {
 function calculate() {
     if (!wxdata) return;
 
-    elevPntFcst = wxdata.data.header.elevation;
     let {
         pos: { lat, lon },
+        elevation: elev,
     } = wxdata;
+
+    let elevFt = elev / ft2m;
 
     let lata = abs(lat),
         lati = trunc(lata),
@@ -425,10 +470,9 @@ function calculate() {
         lons = abs(lonm % 1) * 60,
         EW = sign(lon) == 1 ? 'E' : 'W';
 
-    let elev = elp.elev / ft2m;
-    if (elev < 0) elev = 0;
-
-    let d = wxdata.data.data;
+    
+    let d = wxdata;
+    
     let ix = 0;
     for (let i = 0; i < d.ts.length; i++) {
         if (d.ts[i] > ts) {
@@ -440,16 +484,30 @@ function calculate() {
         }
     }
 
-    let wind = d.wind ? d.wind[ix] : 'No wind data';
-    let gust = d.gust ? d.gust[ix] : 'No gust data';
-    let windDir = d.windDir ? d.windDir[ix] : 'No windDir data';
-    let rain = d.rain ? d.rain[ix] : 'No rain data';
-    let cbase = !d.cbase ? 'No cbase data' : d.cbase[ix] == null ? 'No cloud' : d.cbase[ix];
-    let rh = d.rh ? d.rh[ix] : 'No rh data';
-    let pressure = d.pressure ? d.pressure[ix] : 'No pressure data';
-    let dewPoint = d.dewPoint ? d.dewPoint[ix] : 'No dewPoint data';
-    let temp = d.temp ? d.temp[ix] : 'No temp data';
-    //weathercode = d.weathercode[ix];
+    const valid = (d, p) => d[p] && d[p][ix] !== null;
+    let p = 'wind_u-surface',
+        p2 = 'wind_v-surface';
+    let wind = valid(d, p) ? utils.vec2size(d[p][ix], d[p2][ix]) : 'No wind data';
+    let windDir = valid(d, p) ? utils.vec2dir(d[p][ix], d[p2][ix]) : 'No windDir data';
+    p = 'gust-surface';
+    let gust = valid(d, p) ? d[p][ix] : 'No gust data';
+    let rainDuration = d['past3hprecip-surface'] === undefined ? 1 : 3;
+    p = `past${rainDuration}hprecip-surface`;
+    let rain = valid(d, p) ? d[p][ix] * 1000 : 'No rain data';
+    p = `past${rainDuration}hconvprecip-surface`;
+    let convRain = valid(d, p) ? d[p][ix] * 1000 : 'No convective rain data';
+    p = 'cbase-surface';
+    let cbase = !valid(d, p) ? 'No cbase data' : d[p][ix] == null ? 'No cloud' : d[p][ix];
+    p = 'rh-surface';
+    let rh = valid(d, p) ? d[p][ix] : 'No rh data';
+    p = 'pressure-surface';
+    let pressure = valid(d, p) ? d[p][ix] : 'No pressure data';
+    p = 'dewpoint-surface';
+    let dewPoint = valid(d, p) ? d[p][ix] : 'No dewPoint data';
+    p = 'temp-surface';
+    let temp = valid(d, p) ? d[p][ix] : 'No temp data';
+    p = 'weatherwarnings-surface';
+    let weatherWarnings = valid(d, p) ? d[p][ix] : 'No Wx warnings';
 
     /** pressureC in hPa */
     let pressureC = round(pressure) / 100;
@@ -457,7 +515,7 @@ function calculate() {
     let dewPC = round((dewPoint + K) * 10) / 10;
 
     let da_corr_dp = dewPC * 20;
-    let pa = elev + 27 * (1013 - pressureC);
+    let pa = elevFt + 27 * (1013 - pressureC);
     let isa = 15 - (1.98 * pa) / 1000;
     let da = pa + 118.8 * (tempC - isa);
     let da_dp = da + da_corr_dp;
@@ -484,7 +542,8 @@ function calculate() {
     vals.forEach(e => {
         // prettier-ignore
         switch (e.txt) {
-                case 'Elev':               e.v = elp.elev;              break;
+                case 'Elev':               e.v = elev;                  break;
+                case 'Depth':              e.v = "";                    break; 
                 case 'PA':                 e.v = pa*ft2m;               break;
                 case 'DA':                 e.v = da*ft2m;               break;
                 case 'DA_dp':              e.v = da_dp*ft2m;            break;
@@ -496,6 +555,7 @@ function calculate() {
                 case 'Apparent T':         e.v = apparentT;             break;
                 case 'Humidity':           e.v = rh;                    break;
                 case 'Rain':               e.v = rain;                  break;
+                case 'Convective rain':    e.v = convRain;              break;
                 case 'Cloudbase':          e.v = cbase;                 break;
                 case 'Wind':               e.v = {wind, windDir};       break;
                 case 'Gust':               e.v = gust;                  break;
@@ -507,7 +567,36 @@ function calculate() {
 
     let data = { vals, coords: { lat, lon } };
     postData(JSON.stringify(data));
-    let pickerDivs = makePickerTextAndFill(vals);
+    makePickerTextAndFill(vals);
+    if (elev == 0 && isChoiceSelected('Depth')) getBathymetry({ lat, lon });
+}
+
+function getBathymetry(c) {
+    bathyReqTime = Date.now();
+    let thisReqTime = bathyReqTime;
+    let url = `https://www.flymap.co.za/srtm30/elev.php?lat=${c.lat}&lng=${c.lng || c.lon}`;
+    
+    fetch(url, {
+        method: 'GET',
+    })
+        .then(r => r.json())
+        .then(r => {
+            if (bathyReqTime > thisReqTime) return; // waiting for more recent Req,  prevent flickering
+            let pickerPos = {
+                lat: pickerT._latlng.lat,
+                lon: pickerT._latlng.lng || pickerT._latlng.lon,
+            };
+            if (abs(c.lat - pickerPos.lat < 0.1 && abs(c.lon - pickerPos.lon) < 0.1)) {
+                vals.find(e => e.txt == 'Depth').v = r[0];
+                let data = { vals, coords: pickerPos };
+                postData(JSON.stringify(data));
+                makePickerTextAndFill(vals);
+            }
+        })
+        .catch(er => {
+            log('err', er);
+            log('DEPTH NOT FOUND,  use 0');
+        });
 }
 
 function fetchData(c) {
@@ -518,69 +607,73 @@ function fetchData(c) {
 
     lastpos = c;
     //  c.model = prod;
-    lefta -= 0.05;
-    righta -= 0.05;
-    if (lefta < 0.6) lefta = 0.6;
-    if (righta < 0.6) righta = 0.6;
-    if ($('#picker-div-left')) $('#picker-div-left').style.color = `rgba(255,255,255,${lefta})`;
-    if ($('#picker-div-right')) $('#picker-div-right').style.color = `rgba(255,255,255,${righta})`;
-    if (elevfnd) {
-        elevfnd = false;
-        http.get(`services/elevation/${c.lat}/${c.lng || c.lon}`)
-            .then(({ data }) => {
-                return data;
-            })
 
-            .then(r => {
-                elp.elev = r; //[0];
-                elp.pos = c;
-                setTimeout(() => (elevfnd = true), 100);
-                righta = 1;
-                if (r == 0) {
-                    //if over sea,  try to find depth
-                    fetch(
-                        `https://www.flymap.co.za/srtm30/elev.php?lat=${c.lat}&lng=${c.lng || c.lon}`,
-                        { method: 'GET' },
-                    )
-                        .then(r => r.json())
-                        .then(r => {
-                            elp.elev = r[0];
-                            calculate();
-                        })
-                        .catch(er => {
-                            log('DEPTH NOT FOUND,  use 0');
-                            calculate();
-                        });
-                } else {
-                    calculate();
+    c.interpolate = true;
+    c.step = 1;
+
+    let product = store.get('product');
+    if (product == 'topoMap') product = 'ecmwf';
+    c.model = product;
+
+    wxdata = { pos: c };
+
+    Promise.all([
+        //windyFetch.getPointForecastData(product, c).catch(e => log(e)),
+        windyFetch.getElevation(c.lat, c.lng || c.lon),
+        fetch('https://api.windy.com/api/point-forecast/v2', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${W.store.get('userToken')}`,
+            },
+            body: JSON.stringify({
+                parameters,
+                lat: c.lat,
+                lon: c.lon,
+                model: product,
+                levels: [levels[0]],
+                key: 'RddPLnCXRuZ3s3Kb5J5G3QnTMToRNxnd',
+                step: c.step,
+            }),
+        })
+            .then(response => response.json())
+            .then(d => {
+                if (
+                    d.error == 'Bad Request' &&
+                    d.message[0].includes('Invalid parameters provided')
+                ) {
+                    parameters = d.message[0].match(/\[(.*)\]/)[1].split(/\s*,\s*/);
+                    fetchData(c);
+                    return null;
                 }
-            })
-            .catch(er => {
-                console.log(er);
-                elevfnd = true;
-            });
-    }
+                return d;
+            }),
+    ]).then(async ([data1, data2]) => {
+        if (data2 == null) {
+            log('error with point forecast api,  get correct parameters');
+            return;
+        }
+        wxdata.elevation = data1.data;
 
-    if (datafnd) {
-        datafnd = false;
-        c.interpolate = true;
-        c.step = 1;
-        let product = store.get('product');
-        if (product == 'topoMap') product = 'ecmwf';
-        windyFetch
-            .getPointForecastData(product, c)
-            .then(data => {
-                wxdata = data;
-                wxdata.pos = c;
-                lefta = 1;
-                setTimeout(() => (datafnd = true), 150);
-                calculate();
-            })
-            .catch(er => {
-                console.log(er);
-                datafnd = true;
-            });
-    }
+        //not using modelElevation at the moment
+        /*
+        if (data1) {
+            wxdata.elevation = data1.data.header.elevation;
+            wxdata.modelElevation = data1.data.header.elevation;
+        } else {
+            log('error with getPointForecastData,  elev not avail');
+            let elev = await windyFetch.getElevation(c.lat, c.lng || c.lon);
+            wxdata.elevation = elev.data;
+        }
+        */
+        for (let d in data2) {
+            wxdata[d] = data2[d];
+        }
+
+        //setTimeout(() => (datafnd = true), 150);
+        calculate();
+    });
+    //}
     fillCoordsFields(c);
 }
 

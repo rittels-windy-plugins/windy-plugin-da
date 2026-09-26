@@ -1,6 +1,6 @@
 import { map } from '@windy/map';
 import store from '@windy/store';
-import { $ } from '@windy/utils';
+import { $, throttle } from '@windy/utils';
 import { emitter as picker } from '@windy/picker';
 import { getPickerMarker } from 'custom-windy-picker';
 import { makePickerTextAndFill, fillCoordsFields, settings } from './da_main.js';
@@ -10,93 +10,98 @@ const { log } = console;
 let pickerT;
 
 let tabId = null, // will get a value when mounted
-    channel,
-    channelPicker,
-    channelData,
-    mapByOtherTab = false,
-    pickerByOtherTab = false;
+    pickerByOtherTab = false,
+    channel;
+
+let TO;
+let params = ['timestamp', 'map', 'level', 'overlay', 'model'];
+let otherTab = {};
+
+function setView(c, z) {
+    map.setView(c, z);
+}
+
+let throttledSW = throttle(setView, 50);
 
 function initSyncTabs() {
     if (tabId == null) tabId = Math.round(Math.random() * 1000000000); // do not reassign tab number,  only if cloased completely.
     pickerT = getPickerMarker();
-}
-
-function postParams() {
-    if (mapByOtherTab) {
-        return;
+    for (let p of params) {
+        otherTab[p] = false;
     }
-    let ts = store.get('timestamp');
-    let zoom = map.getZoom();
-    let center = map.getCenter();
 
-    channel.postMessage({ tabId, ts, zoom, center });
-}
-
-function postPicker(coords) {
-    // for now,  only post if custom-picker is moved.   This is important for tablet when mobile picker can trigger pickerMoved
-    if (coords.source !== 'custom-picker') return;
-    if (pickerByOtherTab) return;
-    channelPicker.postMessage({ tabId, coords });
-}
-
-function postData(data) {
-    if (pickerByOtherTab || !settings.syncPickers) return;
-    channelData.postMessage({ tabId, data });
-}
-
-function receiveData(data, fun) {}
-
-function toggleSyncTabs(syncTabs) {
-    if (tabId == null) return;
-    settings.syncTabs = syncTabs;
-    if (syncTabs) {
-        channel = new BroadcastChannel('syncMapParams');
-        channel.onmessage = e => {
-            if (e.data.tabId !== tabId) {
-                mapByOtherTab = true;
-                store.set('timestamp', e.data.ts);
-                map.setView(e.data.center, e.data.zoom);
-                setTimeout(() => (mapByOtherTab = false), 500);
+    channel = new BroadcastChannel('channel');
+    channel.onmessage = e => {
+        if (e.data.tabId == tabId) return;
+        for (let p of params) {
+            if (e.data[p] !== undefined && settings['sync' + p]) {
+                otherTab[p] = true;
+                clearTimeout(TO);
+                TO = setTimeout(() => (otherTab[p] = false), 500);
+                if (p == 'map') {
+                    throttledSW(e.data.map.center, e.data.map.zoom);
+                } else {
+                    store.set(p, e.data[p]);
+                }
             }
-        };
-        store.on('timestamp', postParams);
-        map.on('move', postParams);
-    } else {
-        if (channel) channel.close();
-        mapByOtherTab = false;
-        store.off('timestamp', postParams);
-        map.off('move', postParams);
-    }
-}
-
-function toggleSyncPickers(syncPickers) {
-    if (tabId == null) return;
-    settings.syncPickers = syncPickers;
-    if (syncPickers) {
-        channelPicker = new BroadcastChannel('syncPickers');
-        channelPicker.onmessage = e => {
-            if (e.data.tabId !== tabId) {
+        }
+        if (settings.syncPickers) {
+            if (e.data.coords !== undefined) {
                 pickerByOtherTab = true;
                 let { coords } = e.data;
                 coords.otherTab = true;
                 pickerT.openMarker(coords);
                 setTimeout(() => (pickerByOtherTab = false), 500);
             }
-        };
-        channelData = new BroadcastChannel('pickerData');
-        channelData.onmessage = e => {
-            if (e.data.tabId !== tabId) {
+            if (e.data.data !== undefined) {
                 let data = JSON.parse(e.data.data);
                 makePickerTextAndFill(data.vals);
                 fillCoordsFields(data.coords);
             }
-        };
+        }
+    };
+}
+
+function postParams(p) {
+    if (!settings['sync' + p] || otherTab[p]) return;
+    if (p == 'map') {
+        let zoom = map.getZoom();
+        let center = map.getCenter();
+        channel.postMessage({ tabId, map: { zoom, center } });
+    } else channel.postMessage({ tabId, [p]: store.get(p) });
+}
+
+function postPicker(coords) {
+    //log('COORDS', coords);
+    // for now,  only post if custom-picker is moved.   This is important for tablet when mobile picker can trigger pickerMoved
+    if (coords.source !== 'custom-picker') return;
+    //log('COORDS', coords, pickerByOtherTab);
+    if (pickerByOtherTab) return;
+    //log('POST', coords);
+    channel.postMessage({ tabId, coords });
+}
+
+function postData(data) {
+    if (pickerByOtherTab || !settings.syncPickers) return;
+    channel.postMessage({ tabId, data });
+}
+
+function toggleSync(p, sync) {
+    if (tabId == null) return;
+    settings['sync' + p] = sync;
+    let f = postParams.bind(0, p);
+    if (p == 'map') map[sync ? 'on' : 'off']('move', f);
+    else store[sync ? 'on' : 'off'](p, f);
+}
+
+function toggleSyncPickers(syncPickers) {
+    if (tabId == null) return;
+    settings.syncPickers = syncPickers;
+    if (syncPickers) {
         pickerT.onDrag(postPicker);
         picker.on('pickerOpened', postPicker);
         picker.on('pickerMoved', postPicker);
     } else {
-        if (channelPicker) channelPicker.close();
-        if (channelData) channelData.close();
         pickerByOtherTab = false;
         pickerT.offDrag(postPicker);
         picker.off('pickerOpened', postPicker);
@@ -118,10 +123,22 @@ function toggleHideMenu(hideMenu) {
 }
 
 function cleanupSync() {
-    toggleHideMenu(false);
-    toggleSyncPickers(false);
-    toggleHideMenu(false);
+    channel.close();
     tabId = null;
 }
 
-export { initSyncTabs, cleanupSync, toggleHideMenu, toggleSyncPickers, toggleSyncTabs, postData };
+export {
+    initSyncTabs,
+    cleanupSync,
+    toggleHideMenu,
+    toggleSyncPickers,
+    toggleSync,
+    /*
+    toggleSyncMap,
+    toggleSyncTimestamp,
+    toggleSyncOverlay,
+    toggleSyncLevel,
+    toggleSyncModel,
+    */
+    postData,
+};

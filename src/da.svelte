@@ -134,10 +134,38 @@
                     <!-- this does not work  in the mobile app,  can work in tablet -->
                     <div
                         class="checkbox"
-                        class:checkbox--off={!syncTabs}
-                        on:click={() => (syncTabs = !syncTabs)}
+                        class:checkbox--off={!syncmap}
+                        on:click={() => (syncmap = !syncmap)}
                     >
-                        Sync browser tabs
+                        Sync map positions
+                    </div>
+                    <div
+                        class="checkbox"
+                        class:checkbox--off={!synctimestamp}
+                        on:click={() => (synctimestamp = !synctimestamp)}
+                    >
+                        Sync timestamps
+                    </div>
+                    <div
+                        class="checkbox"
+                        class:checkbox--off={!synclevel}
+                        on:click={() => (synclevel = !synclevel)}
+                    >
+                        Sync levels
+                    </div>
+                    <div
+                        class="checkbox"
+                        class:checkbox--off={!syncoverlay}
+                        on:click={() => (syncoverlay = !syncoverlay)}
+                    >
+                        Sync overlays
+                    </div>
+                    <div
+                        class="checkbox"
+                        class:checkbox--off={!syncmodel}
+                        on:click={() => (syncmodel = !syncmodel)}
+                    >
+                        Sync models
                     </div>
                     <div
                         class="checkbox"
@@ -186,7 +214,18 @@
     import utils from '@windy/utils';
 
     import { init, closeCompletely, vals, settings } from './da_main.js';
-    import { toggleSyncPickers, toggleSyncTabs, initSyncTabs } from './sync_tabs.js';
+    import {
+        toggleSyncPickers,
+        toggleSync,
+        /*
+        toggleSyncMap,
+        toggleSyncTimestamp,
+        toggleSyncOverlay,
+        toggleSyncLevel,
+        toggleSyncModel,
+        */
+        initSyncTabs,
+    } from './sync_tabs.js';
     import { toggleHideMenu, toggleHideLabels, initOther } from './other.js';
     import {
         coords,
@@ -226,7 +265,16 @@
 
     // the values are stored in the da_main,  so that if the plugin is reopened, the settings remain.
     // it should be false by default.  I do not want it stored in localStorage
-    let { syncTabs, syncPickers, hideMenu, hideLabels } = settings;
+    let {
+        syncmap,
+        syncoverlay,
+        synctimestamp,
+        synclevel,
+        syncmodel,
+        syncPickers,
+        hideMenu,
+        hideLabels,
+    } = settings;
 
     function focus() {
         for (let p in plugins) {
@@ -273,7 +321,7 @@
             initSyncTabs();
             initOther();
 
-            //throw new Error('mounted');
+           // throw new Error('something');
         } catch (e) {
             log(e);
             W.errorLogger.sentErrors.push({ msg: e.message, stack: e.stack });
@@ -307,12 +355,16 @@
         store.set('plugin-da-sections', parseInt(str, 2));
     }
 
-    $: toggleSyncTabs(syncTabs);
+    $: toggleSync('map', syncmap);
+    $: toggleSync('level', synclevel);
+    $: toggleSync('overlay', syncoverlay);
+    $: toggleSync('timestamp', synctimestamp);
+    $: toggleSync('model', syncmodel);
     $: toggleSyncPickers(syncPickers);
     $: toggleHideMenu(hideMenu);
     $: toggleHideLabels(hideLabels);
 </script>
 
 <style lang="less">
-    @import 'da.less?1779610665223';
+    @import 'da.less?1790422014462';
 </style>
