@@ -65,6 +65,7 @@ function initSyncTabs() {
 }
 
 function postParams(p) {
+    
     if (!settings['sync' + p] || otherTab[p]) return;
     if (p == 'map') {
         let zoom = map.getZoom();
@@ -72,6 +73,7 @@ function postParams(p) {
         channel.postMessage({ tabId, map: { zoom, center } });
     } else channel.postMessage({ tabId, [p]: store.get(p) });
 }
+params.forEach(p => (postParamsFuns[p] = postParams.bind(null, p)));
 
 function postPicker(coords) {
     // for now,  only post if custom-picker is moved.   This is important for tablet when mobile picker can trigger pickerMoved
@@ -88,7 +90,7 @@ function postData(data) {
 function toggleSync(p, sync) {
     if (tabId == null) return;
     settings['sync' + p] = sync;
-    if (sync) postParamsFuns[p] = postParams.bind(0, p);
+    log(postParamsFuns[p], p);
     if (p == 'map') map[sync ? 'on' : 'off']('move', postParamsFuns[p]);
     else store[sync ? 'on' : 'off'](p, postParamsFuns[p]);
 }
