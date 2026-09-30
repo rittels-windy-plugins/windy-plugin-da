@@ -415,8 +415,10 @@ function makePickerTextAndFill(vals) {
         if (div) {
             if (typeof v == 'string') {
                 //if depth not yet avail == ""
+
                 if (txt == 'Depth') v = v.padEnd(6, '\u00A0');
-                pickerDivs[div] += `${txt}:  ${v}`;
+                if (txt.includes('DDD')) pickerDivs[div] += v;  // dont show the coordinate format,  not needed.
+                else pickerDivs[div] += `${txt}:  ${v}`;
             } else {
                 let windDir;
                 if (txt == 'Wind') {
@@ -470,9 +472,8 @@ function calculate() {
         lons = abs(lonm % 1) * 60,
         EW = sign(lon) == 1 ? 'E' : 'W';
 
-    
     let d = wxdata;
-    
+
     let ix = 0;
     for (let i = 0; i < d.ts.length; i++) {
         if (d.ts[i] > ts) {
@@ -575,7 +576,7 @@ function getBathymetry(c) {
     bathyReqTime = Date.now();
     let thisReqTime = bathyReqTime;
     let url = `https://www.flymap.co.za/srtm30/elev.php?lat=${c.lat}&lng=${c.lng || c.lon}`;
-    
+
     fetch(url, {
         method: 'GET',
     })
