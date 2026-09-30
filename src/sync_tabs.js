@@ -15,6 +15,8 @@ let tabId = null, // will get a value when mounted
 
 let TO;
 let params = ['timestamp', 'map', 'level', 'overlay', 'model'];
+let postParamsFuns = {};
+
 let otherTab = {};
 
 function setView(c, z) {
@@ -72,12 +74,9 @@ function postParams(p) {
 }
 
 function postPicker(coords) {
-    //log('COORDS', coords);
     // for now,  only post if custom-picker is moved.   This is important for tablet when mobile picker can trigger pickerMoved
     if (coords.source !== 'custom-picker') return;
-    //log('COORDS', coords, pickerByOtherTab);
     if (pickerByOtherTab) return;
-    //log('POST', coords);
     channel.postMessage({ tabId, coords });
 }
 
@@ -89,9 +88,9 @@ function postData(data) {
 function toggleSync(p, sync) {
     if (tabId == null) return;
     settings['sync' + p] = sync;
-    let f = postParams.bind(0, p);
-    if (p == 'map') map[sync ? 'on' : 'off']('move', f);
-    else store[sync ? 'on' : 'off'](p, f);
+    if (sync) postParamsFuns[p] = postParams.bind(0, p);
+    if (p == 'map') map[sync ? 'on' : 'off']('move', postParamsFuns[p]);
+    else store[sync ? 'on' : 'off'](p, postParamsFuns[p]);
 }
 
 function toggleSyncPickers(syncPickers) {
@@ -109,36 +108,11 @@ function toggleSyncPickers(syncPickers) {
     }
 }
 
-function toggleHideMenu(hideMenu) {
-    if (tabId == null) return;
-    if (hideMenu) {
-        $('[data-plugin="rhbottom"]').classList.add('hidden');
-        $('[data-plugin="rhpane-top"]').classList.add('hidden');
-        $('#search').classList.add('hidden');
-    } else {
-        $('[data-plugin="rhbottom"]').classList.remove('hidden');
-        $('[data-plugin="rhpane-top"]').classList.remove('hidden');
-        $('#search').classList.remove('hidden');
-    }
-}
-
 function cleanupSync() {
     channel.close();
+    params.forEach(p => toggleSync(p, false));
+    toggleSyncPickers(false);
     tabId = null;
 }
 
-export {
-    initSyncTabs,
-    cleanupSync,
-    toggleHideMenu,
-    toggleSyncPickers,
-    toggleSync,
-    /*
-    toggleSyncMap,
-    toggleSyncTimestamp,
-    toggleSyncOverlay,
-    toggleSyncLevel,
-    toggleSyncModel,
-    */
-    postData,
-};
+export { initSyncTabs, cleanupSync, toggleSyncPickers, toggleSync, postData };
