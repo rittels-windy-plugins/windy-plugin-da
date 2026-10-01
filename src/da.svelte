@@ -359,12 +359,12 @@
     $: toggleSync('level', synclevel);
     $: toggleSync('overlay', syncoverlay);
     $: toggleSync('timestamp', synctimestamp);
-    $: toggleSync('model', syncmodel);
+    $: toggleSync('product', syncmodel);
     $: toggleSyncPickers(syncPickers);
     $: toggleHideMenu(hideMenu);
     $: toggleHideLabels(hideLabels);
 </script>
 
 <style lang="less">
-    @import 'da.less?1790803602826';
+    @import 'da.less?1790832233910';
 </style>

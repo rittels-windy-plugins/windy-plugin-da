@@ -14,7 +14,7 @@ let tabId = null, // will get a value when mounted
     channel;
 
 let TO;
-let params = ['timestamp', 'map', 'level', 'overlay', 'model'];
+let params = ['timestamp', 'map', 'level', 'overlay', 'product'];
 let postParamsFuns = {};
 
 let otherTab = {};
@@ -65,7 +65,7 @@ function initSyncTabs() {
 }
 
 function postParams(p) {
-    
+    //log("post params", p)
     if (!settings['sync' + p] || otherTab[p]) return;
     if (p == 'map') {
         let zoom = map.getZoom();
