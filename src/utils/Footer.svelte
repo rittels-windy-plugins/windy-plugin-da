@@ -19,6 +19,7 @@
                 {config.version}
                 {infoWinWidth < 410 ? '' : ' by ' + config.author}
             </div>
+
             <a
                 class="button"
                 class:hidden={hideCoffee}
@@ -83,10 +84,10 @@
     import config from '../pluginConfig.js';
     import { toggleFullscreen } from './infoWinUtils.js';
     import { rtrnSelf } from '@windy/client/Metric.js';
-    import { isMobileOrTablet } from '@windy/client/rootScope.js';
+    import { isMobileOrTablet, target } from '@windy/client/rootScope.js';
     let infoWinWidth, isFullscreen;
     export let footerOpen = true;
-    let hideCoffee = false;
+    let hideCoffee = target == 'index' ? true : false;
     export let onFooterClick = () => {};
     export let topRow;
 
