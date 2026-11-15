@@ -83,11 +83,12 @@
     import bcast from '@windy/broadcast';
     import config from '../pluginConfig.js';
     import { toggleFullscreen } from './infoWinUtils.js';
-    import { rtrnSelf } from '@windy/client/Metric.js';
-    import { isMobileOrTablet, target } from '@windy/client/rootScope.js';
+    import { isMobileOrTablet, target } from '@windy/rootScope';
+
     let infoWinWidth, isFullscreen;
     export let footerOpen = true;
-    let hideCoffee = target == 'index' ? true : false;
+    let hideCoffee = target !== 'index';
+    log("HIDE COFFEE", hideCoffee, target);
     export let onFooterClick = () => {};
     export let topRow;
 
